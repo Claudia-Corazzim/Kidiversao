@@ -24,7 +24,7 @@
                         <h2 class="h4">QR Code PIX</h2>
                         <p class="mb-3">Escaneie o QR Code abaixo com o app do seu banco para pagar</p>
                         
-                        {% if payment.point_of_interaction and payment.point_of_interaction.transaction_data %}
+                        {% if payment and payment.point_of_interaction and payment.point_of_interaction.transaction_data %}
                             <!-- QR Code Image -->
                             <div class="mb-3">
                                 <img src="{{ payment.point_of_interaction.transaction_data.qr_code_base64 }}" 
@@ -52,6 +52,7 @@
                         {% else %}
                             <div class="alert alert-warning">
                                 <p>Não foi possível gerar o QR Code PIX. Por favor, tente novamente ou escolha outra forma de pagamento.</p>
+                                <a href="{{ url_for('main.payment', booking_id=booking.id) }}" class="btn btn-primary mt-2">Voltar para métodos de pagamento</a>
                             </div>
                         {% endif %}
                     </div>
@@ -76,6 +77,7 @@
         alert("Código PIX copiado!");
     }
     
+    {% if payment and payment.id and payment.id != "error" %}
     // Verificar status do pagamento a cada 10 segundos
     function checkPaymentStatus() {
         fetch("{{ url_for('main.payment_webhook') }}", {
@@ -95,10 +97,14 @@
             if (data.status === "approved") {
                 window.location.href = "{{ url_for('main.payment_success', booking_id=booking.id) }}";
             }
+        })
+        .catch(error => {
+            console.error("Erro ao verificar status do pagamento:", error);
         });
     }
     
     // Verificar a cada 10 segundos
     setInterval(checkPaymentStatus, 10000);
+    {% endif %}
 </script>
 {% endblock %}

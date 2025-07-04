@@ -76,7 +76,27 @@ class PaymentManager:
             }
         }
         
-        payment_response = self.sdk.payment().create(payment_data)
-        payment = payment_response["response"]
-        
-        return payment
+        try:
+            payment_response = self.sdk.payment().create(payment_data)
+            # Verificar se a resposta foi bem-sucedida
+            if payment_response["status"] == 201:
+                payment = payment_response["response"]
+                return payment
+            else:
+                # Se houver erro na resposta
+                print(f"Erro na resposta do Mercado Pago: {payment_response}")
+                return {
+                    "id": "error",
+                    "status": "error",
+                    "error_message": "Falha ao gerar QR Code PIX",
+                    "point_of_interaction": None
+                }
+        except Exception as e:
+            # Tratar exceções
+            print(f"Exceção ao gerar PIX: {str(e)}")
+            return {
+                "id": "error",
+                "status": "error",
+                "error_message": str(e),
+                "point_of_interaction": None
+            }

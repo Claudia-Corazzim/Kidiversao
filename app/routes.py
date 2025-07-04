@@ -294,20 +294,30 @@ def payment_pix(booking_id):
     # Inicializar gerenciador de pagamentos
     payment_manager = PaymentManager()
     
-    # Gerar QR code PIX
-    payment = payment_manager.generate_pix_qrcode(booking, service)
-    
-    # Salvar informações do pagamento
-    booking.payment_id = payment["id"]
-    booking.payment_method = "pix"
-    booking.payment_status = payment["status"]
-    db.session.commit()
-    
-    # Renderizar página com QR code PIX
-    return render_template('payment_pix.html', 
-                          booking=booking, 
-                          service=service, 
-                          payment=payment)
+    try:
+        # Gerar QR code PIX
+        payment = payment_manager.generate_pix_qrcode(booking, service)
+        
+        # Verificar se houve erro na geração do PIX
+        if payment.get("status") == "error":
+            flash(f'Erro ao gerar QR Code PIX: {payment.get("error_message", "Erro desconhecido")}', 'error')
+            return redirect(url_for('main.payment', booking_id=booking.id))
+        
+        # Salvar informações do pagamento
+        if payment.get("id"):
+            booking.payment_id = payment["id"]
+            booking.payment_method = "pix"
+            booking.payment_status = payment["status"]
+            db.session.commit()
+        
+        # Renderizar página com QR code PIX
+        return render_template('payment_pix.html', 
+                              booking=booking, 
+                              service=service, 
+                              payment=payment)
+    except Exception as e:
+        flash(f'Ocorreu um erro ao processar o pagamento: {str(e)}', 'error')
+        return redirect(url_for('main.payment', booking_id=booking.id))
 
 @bp.route('/payment/success/<int:booking_id>')
 @login_required
