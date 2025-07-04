@@ -14,6 +14,7 @@ O Kidiversão é um sistema web para gerenciamento de serviços e pacotes para f
 - **Autenticação de Usuários**: Sistema de registro e login para clientes e prestadores.
 - **Interface Responsiva**: Design adaptável a diferentes dispositivos usando Bootstrap.
 - **Flash Messages**: Feedback visual para operações realizadas no sistema.
+- **Acessibilidade**: Implementações seguindo diretrizes WCAG para garantir inclusão digital.
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -23,6 +24,7 @@ O Kidiversão é um sistema web para gerenciamento de serviços e pacotes para f
 - **Autenticação**: Flask-Login
 - **Migrações de Banco**: Flask-Migrate com Alembic
 - **Controle de Versão**: Git e GitHub
+- **Acessibilidade**: ARIA, elementos semânticos HTML5
 
 ## 📦 Estrutura do Projeto
 
@@ -92,6 +94,22 @@ kidiversao/
 - **Usuário comum**:
   - Email: usuario@teste.com
   - Senha: senha123
+
+## ♿ Acessibilidade
+
+O Kidiversão foi desenvolvido com foco em acessibilidade digital, seguindo as diretrizes WCAG (Web Content Accessibility Guidelines) para garantir uma experiência inclusiva:
+
+- **Estrutura Semântica**: Uso correto de elementos HTML5 semânticos (header, nav, main, section, etc.)
+- **Atributos ARIA**: Implementação de atributos ARIA para melhorar a navegação por leitores de tela
+- **Contraste de Cores**: Cores com contraste adequado para facilitar a leitura por pessoas com deficiência visual
+- **Navegação por Teclado**: Possibilidade de navegar por todas as funcionalidades usando apenas o teclado
+- **Textos Alternativos**: Imagens com descrições adequadas através do atributo alt
+- **Mensagens de Feedback**: Notificações claras e acessíveis para todas as ações realizadas no sistema
+- **Formulários Acessíveis**: Labels associados corretamente a campos de formulário e mensagens de erro descritivas
+- **Responsividade**: Design adaptável a diferentes dispositivos e configurações de tela
+- **Linguagem Simples**: Textos claros e diretos para facilitar a compreensão
+
+Estas implementações seguem as recomendações do WCAG 2.1 níveis A e AA, tornando o sistema acessível para pessoas com diversas necessidades e habilidades.
 
 ## 📝 Licença
 
