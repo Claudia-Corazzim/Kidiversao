@@ -115,8 +115,15 @@ def delete_package(package_id):
 
 # Listar agendamentos
 @bp.route('/bookings')
+@login_required
 def list_bookings():
-    bookings = Booking.query.all()
+    # Se for admin, mostra todos os agendamentos
+    if current_user.is_admin:
+        bookings = Booking.query.order_by(Booking.event_date.desc()).all()
+    else:
+        # Se for usuário comum, mostra apenas seus agendamentos
+        bookings = Booking.query.filter_by(user_id=current_user.id).order_by(Booking.event_date.desc()).all()
+    
     return render_template('bookings.html', bookings=bookings)
 
 # Criar agendamento

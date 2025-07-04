@@ -90,6 +90,34 @@ footer {
   background-color: #f8f9fa;
 }
 
+/* Estilização para tabelas responsivas */
+.table-responsive {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table th {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(78, 205, 196, 0.1);
+}
+
+.badge.bg-success {
+  background-color: #4caf50 !important;
+}
+
+.badge.bg-warning {
+  background-color: var(--accent-color) !important;
+  color: var(--dark-color);
+}
+
+.badge.bg-danger {
+  background-color: var(--primary-color) !important;
+}
+
 /* Personalização de responsividade */
 @media (max-width: 768px) {
   .logo {
