@@ -1,0 +1,101 @@
+/* Estilo personalizado para Kidiversão - complementando o Bootstrap */
+
+/* Variáveis CSS para facilitar a consistência de cores */
+:root {
+  --primary-color: #ff6b6b;     /* Vermelho coral - cor principal */
+  --secondary-color: #4ecdc4;   /* Verde turquesa - cor secundária */
+  --accent-color: #ffbe0b;      /* Amarelo - cor de destaque */
+  --light-color: #f7fff7;       /* Branco com tom de verde - fundo claro */
+  --dark-color: #1a535c;        /* Azul escuro - texto principal */
+}
+
+/* Customizações gerais */
+body {
+  font-family: 'Nunito', sans-serif;
+  background-color: var(--light-color);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Customização do header */
+header {
+  background-color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+
+/* Customização dos botões */
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: #ff5252;
+  border-color: #ff5252;
+}
+
+.btn-info {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: white;
+}
+
+.btn-info:hover {
+  background-color: #3dbeb6;
+  border-color: #3dbeb6;
+}
+
+.btn-warning {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: var(--dark-color);
+}
+
+.btn-warning:hover {
+  background-color: #ffb300;
+  border-color: #ffb300;
+}
+
+/* Títulos com estilo personalizado */
+h1, h2, h3 {
+  color: var(--primary-color);
+}
+
+/* Cores para preços */
+.text-success {
+  color: var(--accent-color) !important;
+  font-weight: bold;
+}
+
+/* Animações para os cards */
+.card {
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Footer personalizado */
+footer {
+  margin-top: auto;
+  background-color: #f8f9fa;
+}
+
+/* Personalização de responsividade */
+@media (max-width: 768px) {
+  .logo {
+    font-size: 1.5rem;
+  }
+}
+
+
+

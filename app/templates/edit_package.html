@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Kidiversão - Editar Pacote{% endblock %}
+
+{% block content %}
+    <h1 class="text-center mb-4">✏️ Editar Pacote</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nome:</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ package.name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descrição:</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Descreva o pacote em detalhes...">{{ package.descricao }}</textarea>
+                        </div>
+                        
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <a href="{{ url_for('main.list_packages') }}" class="btn btn-outline-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

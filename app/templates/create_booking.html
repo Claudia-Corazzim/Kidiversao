@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <title>Criar Agendamento - Kidiversão</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>➕ Criar Agendamento</h1>
+    <form method="post">
+        <label>ID do Usuário:</label>
+        <input type="number" name="user_id" required><br>
+        <label>ID do Pacote:</label>
+        <input type="number" name="package_id" required><br>
+        <label>Data:</label>
+        <input type="date" name="date" required><br>
+        <button type="submit">Agendar</button>
+    </form>
+    <a href="{{ url_for('main.list_bookings') }}">Voltar</a>
+</body>
+</html>

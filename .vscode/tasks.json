@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Executar Aplicativo Flask",
+			"type": "shell",
+			"command": "python run.py",
+			"group": "test",
+			"isBackground": true
+		}
+	]
+}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Kidiversão - Serviços{% endblock %}
+
+{% block content %}
+    <h1 class="text-center mb-4">🎉 Nossos Serviços</h1>
+    
+    <div class="mb-4 d-flex justify-content-center">
+        <a href="{{ url_for('main.create_service') }}" class="btn btn-primary">➕ Adicionar Serviço</a>
+    </div>
+    
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for service in services %}
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    {% if service.image_url %}
+                        <img src="{{ service.image_url }}" class="card-img-top" alt="{{ service.name }}" style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ service.name }}</h5>
+                        <p class="card-text">{{ service.description }}</p>
+                        <h6 class="card-subtitle mb-3 text-success">R$ {{ service.price }}</h6>
+                        
+                        <div class="d-grid gap-2 mt-3">
+                            <a href="{{ url_for('main.book_service', service_id=service.id) }}" class="btn btn-primary btn-sm">Reservar</a>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('main.edit_service', service_id=service.id) }}" class="btn btn-info btn-sm flex-grow-1">Editar</a>
+                                <form method="post" action="{{ url_for('main.delete_service', service_id=service.id) }}" class="flex-grow-1" onsubmit="return confirm('Tem certeza que deseja excluir este serviço?');">
+                                    <button type="submit" class="btn btn-danger btn-sm w-100">Excluir</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

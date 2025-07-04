@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Kidiversão - Criar Serviço{% endblock %}
+
+{% block content %}
+    <h1 class="text-center mb-4">➕ Criar Serviço</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nome:</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descrição:</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Descreva o serviço em detalhes..."></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Preço:</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control" id="price" name="price" step="0.01" min="0">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="image_url" class="form-label">URL da Imagem (opcional):</label>
+                            <input type="url" class="form-control" id="image_url" name="image_url" placeholder="https://exemplo.com/imagem.jpg">
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Criar Serviço</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

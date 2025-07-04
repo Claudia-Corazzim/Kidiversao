@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Kidiversão - Criar Pacote{% endblock %}
+
+{% block content %}
+    <h1 class="text-center mb-4">➕ Criar Pacote</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nome:</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descrição:</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Descreva o pacote em detalhes..."></textarea>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Criar Pacote</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
