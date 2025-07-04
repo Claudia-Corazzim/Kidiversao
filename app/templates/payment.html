@@ -23,6 +23,7 @@
                     <div class="mb-4">
                         <h2 class="h4">Formas de Pagamento</h2>
                         
+                        {% if preference and preference.id and preference.id != "error" %}
                         <ul class="nav nav-tabs" id="paymentTabs" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="mp-tab" data-bs-toggle="tab" data-bs-target="#mp-content" type="button" role="tab" aria-controls="mp-content" aria-selected="true">Cartão/Boleto</button>
@@ -49,6 +50,13 @@
                                 </div>
                             </div>
                         </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <p>Não foi possível carregar as opções de pagamento. Por favor, tente novamente mais tarde.</p>
+                            <p>Erro: {{ preference.error_message if preference and preference.get('error_message') else 'Erro desconhecido na integração com o Mercado Pago' }}</p>
+                            <a href="{{ url_for('main.list_bookings') }}" class="btn btn-primary mt-2">Voltar para Agendamentos</a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card-footer bg-light">
@@ -68,22 +76,36 @@
         locale: 'pt-BR'
     });
 
+    {% if preference and preference.id and preference.id != "error" %}
     // Inicializar checkout
-    mp.checkout({
-        preference: {
-            id: '{{ preference.id }}'
-        },
-        render: {
-            container: '.cho-container',
-            label: 'Pagar agora',
-        }
-    });
+    try {
+        mp.checkout({
+            preference: {
+                id: '{{ preference.id }}'
+            },
+            render: {
+                container: '.cho-container',
+                label: 'Pagar agora',
+            }
+        });
 
-    // Inicializar Wallet Brick (versão simplificada do checkout)
-    mp.bricks().create("wallet", "wallet_container", {
-        initialization: {
-            preferenceId: "{{ preference.id }}",
-        },
-    });
+        // Inicializar Wallet Brick (versão simplificada do checkout)
+        mp.bricks().create("wallet", "wallet_container", {
+            initialization: {
+                preferenceId: "{{ preference.id }}",
+            },
+        });
+    } catch (error) {
+        console.error("Erro ao inicializar checkout do Mercado Pago:", error);
+        document.querySelector('.cho-container').innerHTML = 
+            '<div class="alert alert-warning">Erro ao carregar checkout: ' + error.message + '</div>';
+        document.querySelector('#wallet_container').innerHTML = 
+            '<div class="alert alert-warning">Erro ao carregar checkout: ' + error.message + '</div>';
+    }
+    {% else %}
+    console.error("Não foi possível inicializar o checkout do Mercado Pago devido a um erro na preferência.");
+    document.querySelector('.cho-container').innerHTML = '<div class="alert alert-warning">Não foi possível carregar o checkout. Por favor, tente novamente mais tarde.</div>';
+    document.querySelector('#wallet_container').innerHTML = '<div class="alert alert-warning">Não foi possível carregar o checkout. Por favor, tente novamente mais tarde.</div>';
+    {% endif %}
 </script>
 {% endblock %}

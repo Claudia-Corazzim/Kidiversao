@@ -264,20 +264,43 @@ def payment(booking_id):
     else:
         base_url = request.scheme + '://' + request.headers.get('Host', '')
     
-    # Criar preferência de pagamento
-    preference = payment_manager.create_preference(booking, service, base_url)
+    # Debug: Imprimir informações sobre o booking e service
+    print(f"Booking ID: {booking.id}, User ID: {booking.user_id}, Service ID: {booking.service_id}")
+    print(f"Service Name: {service.name}, Price: {service.price}, Description: {service.description}")
+    print(f"Base URL: {base_url}")
     
-    # Salvar ID da preferência
-    booking.payment_preference_id = preference["id"]
-    booking.total_amount = service.price
-    db.session.commit()
-    
-    # Renderizar página de pagamento
-    return render_template('payment.html', 
-                          booking=booking, 
-                          service=service, 
-                          preference=preference, 
-                          public_key=current_app.config.get('MERCADO_PAGO_PUBLIC_KEY'))
+    try:
+        # Criar preferência de pagamento
+        preference = payment_manager.create_preference(booking, service, base_url)
+        
+        # Debug: Imprimir a preferência retornada
+        print(f"Preference returned: {json.dumps(preference, indent=2, default=str)}")
+        
+        # Verificar se houve erro na criação da preferência
+        if preference.get("status") == "error" or "id" not in preference:
+            error_message = preference.get("error_message", "Erro desconhecido ao criar preferência de pagamento")
+            flash(f'Erro ao criar preferência de pagamento: {error_message}', 'error')
+            return redirect(url_for('main.list_bookings'))
+        
+        # Salvar ID da preferência
+        booking.payment_preference_id = preference["id"]
+        booking.total_amount = service.price
+        db.session.commit()
+        
+        # Renderizar página de pagamento
+        return render_template('payment.html', 
+                            booking=booking, 
+                            service=service, 
+                            preference=preference, 
+                            public_key=current_app.config.get('MERCADO_PAGO_PUBLIC_KEY'))
+    except Exception as e:
+        # Debug: Imprimir o erro completo
+        import traceback
+        print(f"Erro ao processar pagamento: {str(e)}")
+        print(traceback.format_exc())
+        
+        flash(f'Ocorreu um erro ao processar o pagamento: {str(e)}', 'error')
+        return redirect(url_for('main.list_bookings'))
 
 @bp.route('/payment/pix/<int:booking_id>', methods=['GET'])
 @login_required

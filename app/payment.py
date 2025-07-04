@@ -27,7 +27,7 @@ class PaymentManager:
             "items": [
                 {
                     "title": service.name,
-                    "description": service.description,
+                    "description": service.description or service.name,
                     "quantity": 1,
                     "currency_id": "BRL",
                     "unit_price": float(service.price)
@@ -46,11 +46,56 @@ class PaymentManager:
             "statement_descriptor": "Kidiversao"
         }
         
-        # Criar a preferência
-        preference_response = self.sdk.preference().create(preference_data)
-        preference = preference_response["response"]
-        
-        return preference
+        try:
+            # Debug: imprimir dados enviados para o Mercado Pago
+            print(f"Enviando dados para o Mercado Pago: {json.dumps(preference_data, indent=2)}")
+            
+            # Criar a preferência
+            preference_response = self.sdk.preference().create(preference_data)
+            
+            # Debug: imprimir resposta do Mercado Pago
+            print(f"Resposta do Mercado Pago: {json.dumps(preference_response, indent=2, default=str)}")
+            
+            # Verificar se a resposta foi bem-sucedida e contém os dados esperados
+            if preference_response.get("status") == 201 and "response" in preference_response:
+                preference = preference_response["response"]
+                
+                # Verificar se o campo 'id' existe
+                if "id" not in preference:
+                    print(f"ERRO: Campo 'id' não encontrado na resposta: {json.dumps(preference, indent=2, default=str)}")
+                    # Criar um objeto de resposta de erro
+                    return {
+                        "id": "error",
+                        "init_point": "#",
+                        "error_message": "A resposta do Mercado Pago não contém o ID da preferência",
+                        "status": "error"
+                    }
+                
+                print(f"Preferência criada com sucesso. ID: {preference.get('id')}")
+                return preference
+            else:
+                # Se houver erro na resposta
+                error_message = preference_response.get('message', 'Erro desconhecido')
+                print(f"Erro na resposta do Mercado Pago: {error_message}")
+                print(f"Resposta completa: {json.dumps(preference_response, indent=2, default=str)}")
+                
+                return {
+                    "id": "error",
+                    "init_point": "#",
+                    "error_message": f"Falha ao criar preferência de pagamento: {error_message}",
+                    "status": "error"
+                }
+        except Exception as e:
+            # Tratar exceções
+            import traceback
+            print(f"Exceção ao criar preferência: {str(e)}")
+            print(traceback.format_exc())
+            return {
+                "id": "error",
+                "init_point": "#",
+                "error_message": f"Erro ao processar pagamento: {str(e)}",
+                "status": "error"
+            }
     
     def get_payment_status(self, payment_id):
         """Obter o status de um pagamento"""
