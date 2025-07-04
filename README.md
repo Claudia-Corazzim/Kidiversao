@@ -1,0 +1,1 @@
+Desenvolvimento de um software com framework web que utiliza banco de dados inclua script web (JavaScript), nuvem, uso de ApI, acessibilidades, controle de versão e testes.

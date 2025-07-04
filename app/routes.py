@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, login_user, logout_user
 from app import db
-from app.models import Service, Package, Booking
+from app.models import Service, Package, Booking, User
 
 bp = Blueprint('main', __name__)
 
@@ -159,16 +159,68 @@ def book_service(service_id):
 # Rotas de autenticação
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
-    # Implementação pendente
+    # Se o usuário já estiver logado, redireciona para a página inicial
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        remember = 'remember' in request.form
+        
+        user = User.query.filter_by(email=email).first()
+        
+        # Verifica se o usuário existe e a senha está correta
+        if user and user.check_password(password):
+            login_user(user, remember=remember)
+            flash('Login realizado com sucesso!', 'success')
+            
+            # Verifica se há um parâmetro 'next' na URL (redirecionamento após login)
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            else:
+                return redirect(url_for('main.index'))
+        else:
+            flash('Email ou senha incorretos', 'error')
+    
     return render_template('login.html')
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
-    # Implementação pendente
+    # Se o usuário já estiver logado, redireciona para a página inicial
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        # Verifica se o email já está cadastrado
+        if User.query.filter_by(email=email).first():
+            flash('Este email já está cadastrado', 'error')
+            return render_template('register.html')
+        
+        # Verifica se o nome de usuário já está cadastrado
+        if User.query.filter_by(username=username).first():
+            flash('Este nome de usuário já está em uso', 'error')
+            return render_template('register.html')
+        
+        # Cria um novo usuário
+        user = User(username=username, email=email)
+        user.set_password(password)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        flash('Cadastro realizado com sucesso! Faça login para continuar.', 'success')
+        return redirect(url_for('main.login'))
+    
     return render_template('register.html')
 
 @bp.route('/logout')
 def logout():
-    # Implementação pendente
-    flash('Você foi desconectado.')
+    logout_user()
+    flash('Você foi desconectado com sucesso.', 'success')
     return redirect(url_for('main.index'))

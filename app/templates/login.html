@@ -3,23 +3,40 @@
 {% block title %}Kidiversão - Login{% endblock %}
 
 {% block content %}
-<h1>Login</h1>
-
-<form method="post" class="form-container">
-  <div class="form-group">
-    <label for="username">Usuário:</label>
-    <input id="username" name="username" placeholder="Seu nome de usuário" required>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-body p-4">
+          <h2 class="card-title text-center mb-4">Entrar</h2>
+          
+          <form method="post">
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" name="email" placeholder="Seu endereço de email" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="password" class="form-label">Senha</label>
+              <input type="password" class="form-control" id="password" name="password" placeholder="Sua senha" required>
+            </div>
+            
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="remember" name="remember">
+              <label class="form-check-label" for="remember">Lembrar de mim</label>
+            </div>
+            
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary">Entrar</button>
+            </div>
+          </form>
+          
+          <div class="text-center mt-3">
+            <a href="{{ url_for('main.register') }}" class="text-decoration-none">Não tem conta? Cadastre-se</a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  
-  <div class="form-group">
-    <label for="password">Senha:</label>
-    <input id="password" name="password" type="password" placeholder="Sua senha" required>
-  </div>
-  
-  <button type="submit">Entrar</button>
-</form>
-
-<p style="text-align: center; margin-top: 20px;">
-  <a href="{{ url_for('main.register') }}">Não tem conta? Cadastre-se</a>
-</p>
+</div>
 {% endblock %}
