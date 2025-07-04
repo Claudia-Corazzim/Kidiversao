@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Pagamento Aprovado - Kidiversão{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow border-success">
+                <div class="card-header bg-success text-white">
+                    <h1 class="h3 mb-0">Pagamento Aprovado</h1>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <div class="text-success mb-4">
+                            <i class="bi bi-check-circle-fill" style="font-size: 5rem;"></i>
+                        </div>
+                        
+                        <h2 class="h4">Seu pagamento foi aprovado com sucesso!</h2>
+                        <p>Obrigado por escolher a Kidiversão para seu evento.</p>
+                        
+                        <div class="alert alert-success">
+                            <p class="mb-0"><strong>ID da Reserva:</strong> {{ booking.id }}</p>
+                            <p class="mb-0"><strong>Status:</strong> {{ booking.status }}</p>
+                            <p class="mb-0"><strong>Data do Pagamento:</strong> {{ booking.payment_date.strftime('%d/%m/%Y %H:%M') }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="h5">O que acontece agora?</h3>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Sua reserva está confirmada</li>
+                            <li class="list-group-item">Em breve, um de nossos atendentes entrará em contato para detalhes</li>
+                            <li class="list-group-item">Você pode verificar o status da sua reserva a qualquer momento na sua área de usuário</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-footer bg-light d-flex justify-content-between">
+                    <a href="{{ url_for('main.list_bookings') }}" class="btn btn-outline-success">Minhas Reservas</a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Página Inicial</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

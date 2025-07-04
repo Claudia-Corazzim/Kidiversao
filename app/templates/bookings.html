@@ -1,20 +1,98 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8" />
-    <title>Agendamentos - Kidiversão</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h1>📅 Agendamentos</h1>
-    <a href="{{ url_for('main.create_booking') }}">➕ Novo Agendamento</a>
-    <ul>
-        {% for booking in bookings %}
-            <li>
-                Usuário ID: {{ booking.user_id }} - Pacote ID: {{ booking.package_id }} - Data: {{ booking.date }}
-            </li>
-        {% endfor %}
-    </ul>
-    <a href="{{ url_for('main.index') }}">Ver Serviços</a>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Agendamentos - Kidiversão{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h1 class="h3 mb-0">📅 Meus Agendamentos</h1>
+                    <a href="{{ url_for('main.create_booking') }}" class="btn btn-light">
+                        <i class="bi bi-plus-circle"></i> Novo Agendamento
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if bookings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Serviço</th>
+                                        <th>Data do Evento</th>
+                                        <th>Status</th>
+                                        <th>Pagamento</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings %}
+                                    <tr>
+                                        <td>{{ booking.id }}</td>
+                                        <td>
+                                            {% if booking.service %}
+                                                {{ booking.service.name }}
+                                            {% else %}
+                                                Não disponível
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ booking.event_date.strftime('%d/%m/%Y') }}</td>
+                                        <td>
+                                            <span class="badge rounded-pill 
+                                                {% if booking.status == 'Confirmed' %}bg-success
+                                                {% elif booking.status == 'Pending' %}bg-warning
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ booking.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge rounded-pill 
+                                                {% if booking.payment_status == 'approved' %}bg-success
+                                                {% elif booking.payment_status == 'pending' %}bg-warning
+                                                {% elif booking.payment_status == 'rejected' %}bg-danger
+                                                {% else %}bg-secondary{% endif %}">
+                                                {% if booking.payment_status == 'approved' %}
+                                                    Aprovado
+                                                {% elif booking.payment_status == 'pending' %}
+                                                    Pendente
+                                                {% elif booking.payment_status == 'rejected' %}
+                                                    Recusado
+                                                {% else %}
+                                                    Aguardando
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if booking.payment_status != 'approved' %}
+                                                <a href="{{ url_for('main.payment', booking_id=booking.id) }}" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-credit-card"></i> Pagar
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-success" disabled>
+                                                    <i class="bi bi-check-circle"></i> Pago
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <p class="mb-0">Você ainda não possui agendamentos. <a href="{{ url_for('main.index') }}">Confira nossos serviços</a> e faça sua reserva!</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar para Serviços
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

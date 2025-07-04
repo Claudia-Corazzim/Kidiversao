@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Reservar Serviço - Kidiversão{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0">Reservar Serviço</h1>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            {% if service.image_url %}
+                                <img src="{{ service.image_url }}" class="img-fluid rounded" alt="{{ service.name }}">
+                            {% else %}
+                                <div class="bg-light p-4 text-center rounded">
+                                    <i class="bi bi-image" style="font-size: 5rem;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h2 class="h4">{{ service.name }}</h2>
+                            <p>{{ service.description }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h5 text-success mb-0">R$ {{ service.price }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('main.book_service', service_id=service.id) }}">
+                        <div class="mb-3">
+                            <label for="event_date" class="form-label">Data do Evento</label>
+                            <input type="date" class="form-control" id="event_date" name="event_date" required
+                                   min="{{ now.strftime('%Y-%m-%d') }}">
+                            <div class="form-text">Selecione a data do seu evento.</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-calendar-check"></i> Confirmar Reserva
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

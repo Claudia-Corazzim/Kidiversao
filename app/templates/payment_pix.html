@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Pagamento PIX - Kidiversão{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0">Pagamento via PIX</h1>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <h2 class="h4">Detalhes do Serviço</h2>
+                        <div class="d-flex justify-content-between">
+                            <p><strong>Serviço:</strong> {{ service.name }}</p>
+                            <p><strong>Valor:</strong> R$ {{ service.price }}</p>
+                        </div>
+                        <p><strong>Data do Evento:</strong> {{ booking.event_date.strftime('%d/%m/%Y') }}</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4">QR Code PIX</h2>
+                        <p class="mb-3">Escaneie o QR Code abaixo com o app do seu banco para pagar</p>
+                        
+                        {% if payment.point_of_interaction and payment.point_of_interaction.transaction_data %}
+                            <!-- QR Code Image -->
+                            <div class="mb-3">
+                                <img src="{{ payment.point_of_interaction.transaction_data.qr_code_base64 }}" 
+                                     alt="QR Code PIX" class="img-fluid" style="max-width: 200px;">
+                            </div>
+                            
+                            <!-- PIX Copy & Paste -->
+                            <div class="mb-3">
+                                <p class="small text-muted mb-1">Ou copie e cole o código no app do seu banco:</p>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" value="{{ payment.point_of_interaction.transaction_data.qr_code }}" 
+                                           id="pixCode" readonly>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="copyPixCode()">
+                                        Copiar
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Payment Info -->
+                            <div class="alert alert-info">
+                                <p class="mb-0"><strong>ID do Pagamento:</strong> {{ payment.id }}</p>
+                                <p class="mb-0"><strong>Status:</strong> {{ payment.status }}</p>
+                                <p class="mb-0 small">Após o pagamento, o status será atualizado automaticamente</p>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <p>Não foi possível gerar o QR Code PIX. Por favor, tente novamente ou escolha outra forma de pagamento.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-light d-flex justify-content-between">
+                    <a href="{{ url_for('main.payment', booking_id=booking.id) }}" class="btn btn-secondary">Voltar</a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Página Inicial</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function copyPixCode() {
+        var pixCode = document.getElementById("pixCode");
+        pixCode.select();
+        pixCode.setSelectionRange(0, 99999); // Para dispositivos móveis
+        document.execCommand("copy");
+        alert("Código PIX copiado!");
+    }
+    
+    // Verificar status do pagamento a cada 10 segundos
+    function checkPaymentStatus() {
+        fetch("{{ url_for('main.payment_webhook') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                type: "payment",
+                data: {
+                    id: "{{ payment.id }}"
+                }
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "approved") {
+                window.location.href = "{{ url_for('main.payment_success', booking_id=booking.id) }}";
+            }
+        });
+    }
+    
+    // Verificar a cada 10 segundos
+    setInterval(checkPaymentStatus, 10000);
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Pagamento Recusado - Kidiversão{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h1 class="h3 mb-0">Pagamento Recusado</h1>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <div class="text-danger mb-4">
+                            <i class="bi bi-x-circle-fill" style="font-size: 5rem;"></i>
+                        </div>
+                        
+                        <h2 class="h4">Ocorreu um problema com o seu pagamento</h2>
+                        <p>Infelizmente não foi possível processar o pagamento.</p>
+                        
+                        <div class="alert alert-danger">
+                            <p class="mb-0"><strong>ID da Reserva:</strong> {{ booking.id }}</p>
+                            <p class="mb-0"><strong>Status:</strong> {{ booking.status }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="h5">O que pode ter acontecido?</h3>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Problema na autorização do cartão</li>
+                            <li class="list-group-item">Saldo ou limite insuficiente</li>
+                            <li class="list-group-item">Dados incorretos ou incompletos</li>
+                            <li class="list-group-item">Problema temporário no sistema de pagamento</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <a href="{{ url_for('main.payment', booking_id=booking.id) }}" class="btn btn-primary btn-lg">
+                            Tentar Novamente
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Página Inicial</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

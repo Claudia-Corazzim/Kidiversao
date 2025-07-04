@@ -42,6 +42,13 @@ class Booking(db.Model):
     service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=False)
     event_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(50), default='Pending')
+    # Campos para pagamento
+    payment_status = db.Column(db.String(50), default='Pending')
+    payment_date = db.Column(db.DateTime, nullable=True)
+    payment_method = db.Column(db.String(50), nullable=True)
+    payment_id = db.Column(db.String(100), nullable=True)
+    payment_preference_id = db.Column(db.String(100), nullable=True)
+    total_amount = db.Column(db.Numeric(10, 2), default=0.0)
 
 class Package(db.Model):
     id = db.Column(db.Integer, primary_key=True)

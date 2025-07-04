@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Pagamento Pendente - Kidiversão{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h1 class="h3 mb-0">Pagamento Pendente</h1>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <div class="text-warning mb-4">
+                            <i class="bi bi-hourglass-split" style="font-size: 5rem;"></i>
+                        </div>
+                        
+                        <h2 class="h4">Seu pagamento está sendo processado</h2>
+                        <p>Estamos aguardando a confirmação do seu pagamento.</p>
+                        
+                        <div class="alert alert-warning">
+                            <p class="mb-0"><strong>ID da Reserva:</strong> {{ booking.id }}</p>
+                            <p class="mb-0"><strong>Status:</strong> {{ booking.status }}</p>
+                            <p class="mb-0"><strong>Data:</strong> {{ booking.payment_date.strftime('%d/%m/%Y %H:%M') if booking.payment_date else 'Pendente' }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="h5">O que acontece agora?</h3>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Se você escolheu boleto, efetue o pagamento em até 3 dias úteis</li>
+                            <li class="list-group-item">O sistema será atualizado automaticamente após a confirmação</li>
+                            <li class="list-group-item">Você receberá uma notificação por email quando o pagamento for aprovado</li>
+                            <li class="list-group-item">Você pode verificar o status a qualquer momento na sua área de usuário</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-footer bg-light d-flex justify-content-between">
+                    <a href="{{ url_for('main.list_bookings') }}" class="btn btn-outline-warning">Minhas Reservas</a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Página Inicial</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
