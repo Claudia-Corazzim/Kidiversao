@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user, login_user, logout_user
 from app import db
-from app.models import Service, Package, Booking, User
+from app.models import Service, Package, Booking, User, PackageItem
 from app.payment import PaymentManager
 from datetime import datetime
 import json
@@ -63,9 +63,26 @@ def edit_service(service_id):
 def delete_service(service_id):
     service = Service.query.get_or_404(service_id)
     
-    db.session.delete(service)
-    db.session.commit()
-    flash('Serviço excluído com sucesso!', 'success')
+    # Verificar se existem reservas associadas a este serviço
+    bookings = Booking.query.filter_by(service_id=service_id).all()
+    if bookings:
+        flash(f'Não é possível excluir este serviço porque existem {len(bookings)} reservas associadas a ele. Você precisa cancelar ou reassociar estas reservas primeiro.', 'error')
+        return redirect(url_for('main.index'))
+    
+    # Verificar se o serviço está em algum pacote
+    package_items = PackageItem.query.filter_by(service_id=service_id).all()
+    if package_items:
+        flash(f'Não é possível excluir este serviço porque ele está incluído em {len(package_items)} pacotes. Remova-o dos pacotes primeiro.', 'error')
+        return redirect(url_for('main.index'))
+    
+    try:
+        db.session.delete(service)
+        db.session.commit()
+        flash('Serviço excluído com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir serviço: {str(e)}', 'error')
+    
     return redirect(url_for('main.index'))
 
 # Listar pacotes
