@@ -63,24 +63,41 @@ def edit_service(service_id):
 def delete_service(service_id):
     service = Service.query.get_or_404(service_id)
     
-    # Verificar se existem reservas associadas a este serviço
-    bookings = Booking.query.filter_by(service_id=service_id).all()
-    if bookings:
-        flash(f'Não é possível excluir este serviço porque existem {len(bookings)} reservas associadas a ele. Você precisa cancelar ou reassociar estas reservas primeiro.', 'error')
-        return redirect(url_for('main.index'))
-    
-    # Verificar se o serviço está em algum pacote
-    package_items = PackageItem.query.filter_by(service_id=service_id).all()
-    if package_items:
-        flash(f'Não é possível excluir este serviço porque ele está incluído em {len(package_items)} pacotes. Remova-o dos pacotes primeiro.', 'error')
-        return redirect(url_for('main.index'))
-    
     try:
+        # Verificar se existem reservas associadas a este serviço
+        bookings = Booking.query.filter_by(service_id=service_id).all()
+        if bookings:
+            # Logar as informações de cada reserva para depuração
+            print(f"Encontradas {len(bookings)} reservas associadas ao serviço {service_id}:")
+            for booking in bookings:
+                print(f"Booking ID: {booking.id}, User ID: {booking.user_id}, Service ID: {booking.service_id}, Status: {booking.status}, Payment Status: {booking.payment_status}")
+            
+            flash(f'Não é possível excluir este serviço porque existem {len(bookings)} reservas associadas a ele. Você precisa cancelar ou reassociar estas reservas primeiro.', 'error')
+            return redirect(url_for('main.index'))
+        
+        # Verificar se o serviço está em algum pacote
+        package_items = PackageItem.query.filter_by(service_id=service_id).all()
+        if package_items:
+            flash(f'Não é possível excluir este serviço porque ele está incluído em {len(package_items)} pacotes. Remova-o dos pacotes primeiro.', 'error')
+            return redirect(url_for('main.index'))
+        
+        # Forçar exclusão das reservas associadas se alguma ainda existir
+        if Booking.query.filter_by(service_id=service_id).count() > 0:
+            remaining_bookings = Booking.query.filter_by(service_id=service_id).all()
+            for booking in remaining_bookings:
+                print(f"Forçando exclusão da reserva: {booking.id}")
+                db.session.delete(booking)
+            db.session.commit()
+            print("Reservas associadas excluídas com sucesso")
+        
         db.session.delete(service)
         db.session.commit()
         flash('Serviço excluído com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
+        print(f"Erro ao excluir serviço: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
         flash(f'Erro ao excluir serviço: {str(e)}', 'error')
     
     return redirect(url_for('main.index'))
