@@ -28,6 +28,7 @@
                     <div class="collapse navbar-collapse" id="navbarNav">
                         <ul class="navbar-nav me-auto">
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index') }}"><i class="bi bi-house-door"></i> Home</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.contact') }}"><i class="bi bi-geo-alt"></i> Contato</a></li>
                             {% if current_user.is_authenticated %}
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('main.list_packages') }}"><i class="bi bi-box"></i> Pacotes</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('main.list_bookings') }}"><i class="bi bi-calendar-check"></i> Agendamentos</a></li>
@@ -83,6 +84,7 @@
                 <div class="col-md-4 mb-3">
                     <h5>Links Rápidos</h5>
                     <div><a href="{{ url_for('main.index') }}" class="text-decoration-none">Home</a></div>
+                    <div><a href="{{ url_for('main.contact') }}" class="text-decoration-none">Contato</a></div>
                     <div><a href="{{ url_for('main.list_packages') }}" class="text-decoration-none">Pacotes</a></div>
                     <div>
                         <a href="https://www.facebook.com/profile.php?id=61577869483972&locale=pt_BR" 

@@ -32,18 +32,20 @@ class Service(db.Model):
     price = db.Column(db.Numeric)
     image_url = db.Column(db.String(200))
 
-    bookings = db.relationship('Booking', backref='service', lazy=True)
+    # Modificando para usar cascade delete nas relações
+    bookings = db.relationship('Booking', backref='service', lazy=True, 
+                               cascade='all, delete-orphan')
     reviews = db.relationship('Review', backref='service', lazy=True)
     package_items = db.relationship('PackageItem', backref='service', lazy=True)
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=False)
+    service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=False, index=True)
     event_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(50), default='Pending')
     # Campos para pagamento
-    payment_status = db.Column(db.String(50), default='Pending')
+    payment_status = db.Column(db.String(50), default='Pending', index=True)
     payment_date = db.Column(db.DateTime, nullable=True)
     payment_method = db.Column(db.String(50), nullable=True)
     payment_id = db.Column(db.String(100), nullable=True)

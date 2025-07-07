@@ -3,6 +3,7 @@ from flask_login import login_required, current_user, login_user, logout_user
 from app import db
 from app.models import Service, Package, Booking, User, PackageItem
 from app.payment import PaymentManager
+from app.contact import ContactManager
 from datetime import datetime
 import json
 
@@ -64,40 +65,44 @@ def delete_service(service_id):
     service = Service.query.get_or_404(service_id)
     
     try:
-        # Verificar se existem reservas associadas a este serviço
-        bookings = Booking.query.filter_by(service_id=service_id).all()
-        if bookings:
-            # Logar as informações de cada reserva para depuração
-            print(f"Encontradas {len(bookings)} reservas associadas ao serviço {service_id}:")
-            for booking in bookings:
-                print(f"Booking ID: {booking.id}, User ID: {booking.user_id}, Service ID: {booking.service_id}, Status: {booking.status}, Payment Status: {booking.payment_status}")
-            
-            flash(f'Não é possível excluir este serviço porque existem {len(bookings)} reservas associadas a ele. Você precisa cancelar ou reassociar estas reservas primeiro.', 'error')
+        # Verificação rápida de reservas pagas associadas a este serviço
+        paid_bookings_count = Booking.query.filter_by(
+            service_id=service_id, 
+            payment_status='approved'
+        ).count()
+        
+        # Se houver reservas pagas, não permitir exclusão
+        if paid_bookings_count > 0:
+            flash(f'Não é possível excluir este serviço porque existem {paid_bookings_count} reservas pagas associadas a ele.', 'error')
             return redirect(url_for('main.index'))
+        
+        # Verificar número de reservas pendentes para alerta (sem carregar objetos completos)
+        pending_bookings_count = Booking.query.filter_by(
+            service_id=service_id, 
+            payment_status='pending'
+        ).count()
+        
+        # Se houver reservas pendentes, alertar mas permitir exclusão
+        if pending_bookings_count > 0:
+            flash(f'Atenção: Este serviço possui {pending_bookings_count} reservas pendentes que serão canceladas.', 'warning')
         
         # Verificar se o serviço está em algum pacote
-        package_items = PackageItem.query.filter_by(service_id=service_id).all()
-        if package_items:
-            flash(f'Não é possível excluir este serviço porque ele está incluído em {len(package_items)} pacotes. Remova-o dos pacotes primeiro.', 'error')
+        package_items_count = PackageItem.query.filter_by(service_id=service_id).count()
+        if package_items_count > 0:
+            flash(f'Não é possível excluir este serviço porque ele está incluído em {package_items_count} pacotes. Remova-o dos pacotes primeiro.', 'error')
             return redirect(url_for('main.index'))
         
-        # Forçar exclusão das reservas associadas se alguma ainda existir
-        if Booking.query.filter_by(service_id=service_id).count() > 0:
-            remaining_bookings = Booking.query.filter_by(service_id=service_id).all()
-            for booking in remaining_bookings:
-                print(f"Forçando exclusão da reserva: {booking.id}")
-                db.session.delete(booking)
-            db.session.commit()
-            print("Reservas associadas excluídas com sucesso")
-        
+        # Com a configuração cascade='all, delete-orphan' no modelo,
+        # a exclusão do serviço irá automaticamente excluir todas as reservas
         db.session.delete(service)
         db.session.commit()
+        
         flash('Serviço excluído com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
-        print(f"Erro ao excluir serviço: {str(e)}")
+        # Log simplificado para não sobrecarregar o console
         import traceback
-        print(traceback.format_exc())
+        print(f"Erro ao excluir serviço {service_id}: {str(e)}")
         flash(f'Erro ao excluir serviço: {str(e)}', 'error')
     
     return redirect(url_for('main.index'))
@@ -542,12 +547,41 @@ def cancel_booking(booking_id):
         return redirect(url_for('main.list_bookings'))
     
     try:
-        # Excluir o booking
+        # Excluir o booking (sem logs excessivos)
         db.session.delete(booking)
         db.session.commit()
         flash('Agendamento cancelado com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
+        # Log simplificado
+        print(f"Erro ao cancelar agendamento {booking_id}: {str(e)}")
         flash(f'Erro ao cancelar agendamento: {str(e)}', 'error')
     
     return redirect(url_for('main.list_bookings'))
+
+# Página de contato
+@bp.route('/contact', methods=['GET', 'POST'])
+def contact():
+    """Página de contato com informações da empresa e formulário de mensagem"""
+    if request.method == 'POST':
+        # Processar o formulário de contato
+        name = request.form.get('name')
+        email = request.form.get('email')
+        phone = request.form.get('phone', '')
+        message = request.form.get('message')
+        
+        # Validação básica
+        if not name or not email or not message:
+            flash('Por favor, preencha todos os campos obrigatórios.', 'error')
+            return render_template('contact.html')
+        
+        # Processar a mensagem usando ContactManager
+        success, msg = ContactManager.save_message(name, email, phone, message)
+        
+        if success:
+            flash('Mensagem enviada com sucesso! Entraremos em contato em breve.', 'success')
+            return redirect(url_for('main.contact'))
+        else:
+            flash(msg, 'error')
+            
+    return render_template('contact.html')

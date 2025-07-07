@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Contato - Kidiversão{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm rounded-3 border-0">
+                <div class="card-body p-5">
+                    <h1 class="text-center mb-5">Entre em Contato</h1>
+                    
+                    <div class="row mb-5">
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <div class="contact-info">
+                                <h3 class="h5 mb-4">Informações de Contato</h3>
+                                
+                                <div class="d-flex mb-3">
+                                    <div class="icon-box me-3">
+                                        <i class="bi bi-geo-alt-fill text-primary fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="h6 mb-1">Endereço</h5>
+                                        <p class="mb-0">Rua das Crianças, 123<br>Bairro Feliz, São Paulo - SP<br>CEP: 01234-567</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex mb-3">
+                                    <div class="icon-box me-3">
+                                        <i class="bi bi-telephone-fill text-primary fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="h6 mb-1">Telefone</h5>
+                                        <p class="mb-0">(11) 4567-8901</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex mb-3">
+                                    <div class="icon-box me-3">
+                                        <i class="bi bi-whatsapp text-primary fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="h6 mb-1">WhatsApp</h5>
+                                        <p class="mb-0">
+                                            <a href="https://wa.me/5511945678901" target="_blank" class="text-decoration-none">
+                                                (11) 94567-8901
+                                            </a>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex mb-3">
+                                    <div class="icon-box me-3">
+                                        <i class="bi bi-envelope-fill text-primary fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="h6 mb-1">Email</h5>
+                                        <p class="mb-0">
+                                            <a href="mailto:contato@kidiversao.com.br" class="text-decoration-none">
+                                                contato@kidiversao.com.br
+                                            </a>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex mb-3">
+                                    <div class="icon-box me-3">
+                                        <i class="bi bi-clock-fill text-primary fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="h6 mb-1">Horário de Atendimento</h5>
+                                        <p class="mb-0">Segunda a Sexta: 09h às 18h<br>Sábado: 09h às 13h</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="social-links mt-4">
+                                    <a href="https://www.facebook.com/profile.php?id=61577869483972&locale=pt_BR" class="me-3" target="_blank">
+                                        <i class="bi bi-facebook fs-4 text-primary"></i>
+                                    </a>
+                                    <a href="https://www.instagram.com/ach_adinhosclau?igsh=MnEwcTF1a215cXNq" class="me-3" target="_blank">
+                                        <i class="bi bi-instagram fs-4 text-danger"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="contact-form">
+                                <h3 class="h5 mb-4">Envie uma Mensagem</h3>
+                                
+                                <form action="{{ url_for('main.contact') }}" method="post">
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label">Nome</label>
+                                        <input type="text" class="form-control" id="name" name="name" required>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" name="email" required>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="phone" class="form-label">Telefone</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="message" class="form-label">Mensagem</label>
+                                        <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="map-container">
+                        <h3 class="h5 mb-4 text-center">Nossa Localização</h3>
+                        <div class="ratio ratio-16x9">
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.3973533786197!2d-46.6478404!3d-23.5558756!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce59aa5b5b4021%3A0x1bd050f6ea410a!2sAv.%20Paulista%2C%20S%C3%A3o%20Paulo%20-%20SP!5e0!3m2!1spt-BR!2sbr!4v1625693476782!5m2!1spt-BR!2sbr" 
+                                 style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Scripts adicionais podem ser adicionados aqui se necessário -->
+{% endblock %}

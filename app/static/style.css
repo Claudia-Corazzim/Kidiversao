@@ -152,6 +152,55 @@ footer h5 {
   background-color: var(--primary-color) !important;
 }
 
+/* Estilos para a página de contato */
+.contact-info .icon-box {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.social-links a:hover {
+  transform: translateY(-3px);
+}
+
+.map-container {
+  margin-top: 30px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilização do formulário de contato */
+.contact-form label {
+  font-weight: 600;
+  color: var(--dark-color);
+}
+
+.contact-form .form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
+}
+
+.contact-form button {
+  padding: 10px 25px;
+  font-weight: 600;
+}
+
+/* Card com fundo semitransparente para melhor legibilidade */
+.card {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(5px);
+}
+
 /* Personalização de responsividade */
 @media (max-width: 768px) {
   .logo {
