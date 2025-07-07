@@ -5,6 +5,7 @@
 {% block content %}
     <h1 class="text-center mb-4">🎉 Nossos Serviços</h1>
     
+    {% if current_user.is_authenticated %}
     <div class="mb-4 d-flex justify-content-center">
         <a href="{{ url_for('main.create_service') }}" class="btn btn-primary">➕ Adicionar Serviço</a>
     </div>
@@ -35,4 +36,32 @@
             </div>
         {% endfor %}
     </div>
+    {% else %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body p-5 text-center">
+                        <i class="bi bi-lock-fill display-1 text-primary mb-4"></i>
+                        <h2 class="card-title mb-4">Acesso Restrito</h2>
+                        <p class="card-text fs-5 mb-4">
+                            Para interagir com o site e visualizar nossos serviços, é necessário criar uma conta ou fazer login.
+                        </p>
+                        <p class="card-text text-muted mb-4">
+                            Crie uma conta gratuitamente para acessar todos os recursos do Kidiversão e agendar os melhores serviços para sua festa infantil!
+                        </p>
+                        <div class="d-grid gap-3 col-md-8 mx-auto">
+                            <a href="{{ url_for('main.login') }}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Fazer Login
+                            </a>
+                            <a href="{{ url_for('main.register') }}" class="btn btn-outline-primary btn-lg">
+                                <i class="bi bi-person-plus me-2"></i>Criar Conta
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 {% endblock %}

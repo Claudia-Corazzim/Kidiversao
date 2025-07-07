@@ -12,16 +12,19 @@ bp = Blueprint('main', __name__)
 @bp.route('/')
 def index():
     services = Service.query.all()
+    # Se o usuário não estiver logado, mostra apenas a página com mensagem
     return render_template('index.html', services=services)
 
 # Listar todos os serviços (API JSON)
 @bp.route('/services')
+@login_required
 def list_services():
     services = Service.query.all()
     return jsonify([s.to_dict() for s in services])
 
 # Criar um novo serviço
 @bp.route('/service/create', methods=['GET', 'POST'])
+@login_required
 def create_service():
     if request.method == 'POST':
         name = request.form['name']
@@ -38,6 +41,7 @@ def create_service():
 
 # Editar serviço
 @bp.route('/service/edit/<int:service_id>', methods=['GET', 'POST'])
+@login_required
 def edit_service(service_id):
     service = Service.query.get_or_404(service_id)
     
@@ -55,6 +59,7 @@ def edit_service(service_id):
 
 # Excluir serviço
 @bp.route('/service/delete/<int:service_id>', methods=['POST'])
+@login_required
 def delete_service(service_id):
     service = Service.query.get_or_404(service_id)
     
@@ -65,12 +70,14 @@ def delete_service(service_id):
 
 # Listar pacotes
 @bp.route('/packages')
+@login_required
 def list_packages():
     packages = Package.query.all()
     return render_template('packages.html', packages=packages)
 
 # Criar pacote
 @bp.route('/package/create', methods=['GET', 'POST'])
+@login_required
 def create_package():
     if request.method == 'POST':
         name = request.form['name']
@@ -90,6 +97,7 @@ def create_package():
 
 # Editar pacote
 @bp.route('/package/edit/<int:package_id>', methods=['GET', 'POST'])
+@login_required
 def edit_package(package_id):
     package = Package.query.get_or_404(package_id)
     
@@ -105,6 +113,7 @@ def edit_package(package_id):
 
 # Excluir pacote
 @bp.route('/package/delete/<int:package_id>', methods=['POST'])
+@login_required
 def delete_package(package_id):
     package = Package.query.get_or_404(package_id)
     
@@ -128,6 +137,7 @@ def list_bookings():
 
 # Criar agendamento
 @bp.route('/booking/create', methods=['GET', 'POST'])
+@login_required
 def create_booking():
     if request.method == 'POST':
         user_id = request.form['user_id']
@@ -137,11 +147,13 @@ def create_booking():
         new_booking = Booking(user_id=user_id, package_id=package_id, date=date)
         db.session.add(new_booking)
         db.session.commit()
-        flash('Agendamento realizado com sucesso!')
+        flash('Agendamento realizado com sucesso!', 'success')
         return redirect(url_for('main.list_bookings'))
-    services = Service.query.all()
+    
+    # Pegar a data de hoje para definir a data mínima no formulário
+    today = datetime.now().strftime('%Y-%m-%d')
     packages = Package.query.all()
-    return render_template('create_booking.html', services=services, packages=packages)
+    return render_template('create_booking.html', packages=packages, today=today)
 
 @bp.route('/admin')
 @login_required
@@ -212,6 +224,17 @@ def register():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # Verifica se as senhas coincidem
+        if password != confirm_password:
+            flash('As senhas não coincidem', 'error')
+            return render_template('register.html')
+        
+        # Verifica se a senha tem pelo menos 6 caracteres
+        if len(password) < 6:
+            flash('A senha deve ter pelo menos 6 caracteres', 'error')
+            return render_template('register.html')
         
         # Verifica se o email já está cadastrado
         if User.query.filter_by(email=email).first():
@@ -279,6 +302,7 @@ def payment(booking_id):
         # Verificar se houve erro na criação da preferência
         if preference.get("status") == "error" or "id" not in preference:
             error_message = preference.get("error_message", "Erro desconhecido ao criar preferência de pagamento")
+            print(f"ERRO NA PREFERÊNCIA: {error_message}")
             flash(f'Erro ao criar preferência de pagamento: {error_message}', 'error')
             return redirect(url_for('main.list_bookings'))
         
@@ -297,6 +321,11 @@ def payment(booking_id):
         # Debug: Imprimir o erro completo
         import traceback
         print(f"Erro ao processar pagamento: {str(e)}")
+        print(traceback.format_exc())
+        
+        # Mensagem amigável para o usuário
+        flash(f'Ocorreu um erro ao processar o pagamento. Por favor, tente novamente ou entre em contato com o suporte. Detalhes: {str(e)}', 'error')
+        return redirect(url_for('main.list_bookings'))
         print(traceback.format_exc())
         
         flash(f'Ocorreu um erro ao processar o pagamento: {str(e)}', 'error')
@@ -321,17 +350,25 @@ def payment_pix(booking_id):
         # Gerar QR code PIX
         payment = payment_manager.generate_pix_qrcode(booking, service)
         
+        # Debug: Imprimir a resposta do pagamento PIX
+        print(f"PIX Payment response: {json.dumps(payment, indent=2, default=str)}")
+        
         # Verificar se houve erro na geração do PIX
-        if payment.get("status") == "error":
-            flash(f'Erro ao gerar QR Code PIX: {payment.get("error_message", "Erro desconhecido")}', 'error')
+        if payment.get("status") == "error" or "id" not in payment:
+            error_message = payment.get("error_message", "Erro desconhecido ao gerar QR Code PIX")
+            flash(f'Erro ao gerar QR Code PIX: {error_message}', 'error')
+            return redirect(url_for('main.payment', booking_id=booking.id))
+        
+        # Verificar se o PIX contém os dados do QR Code
+        if not payment.get("point_of_interaction") or not payment.get("point_of_interaction", {}).get("transaction_data"):
+            flash('Erro ao gerar QR Code PIX: Dados do QR Code não encontrados na resposta', 'error')
             return redirect(url_for('main.payment', booking_id=booking.id))
         
         # Salvar informações do pagamento
-        if payment.get("id"):
-            booking.payment_id = payment["id"]
-            booking.payment_method = "pix"
-            booking.payment_status = payment["status"]
-            db.session.commit()
+        booking.payment_id = payment["id"]
+        booking.payment_method = "pix"
+        booking.payment_status = payment["status"]
+        db.session.commit()
         
         # Renderizar página com QR code PIX
         return render_template('payment_pix.html', 
@@ -399,30 +436,57 @@ def payment_webhook():
     """Webhook para receber notificações de pagamento do Mercado Pago"""
     payload = request.json
     
-    if payload.get('type') == 'payment' and payload.get('data', {}).get('id'):
-        payment_id = payload['data']['id']
-        
-        # Inicializar gerenciador de pagamentos
-        payment_manager = PaymentManager()
-        
-        # Obter status do pagamento
-        payment = payment_manager.get_payment_status(payment_id)
-        
-        # Obter ID da reserva a partir da referência externa
-        external_reference = payment.get('external_reference')
-        if external_reference:
-            booking = Booking.query.get(int(external_reference))
-            if booking:
-                # Atualizar status do pagamento
-                booking.payment_id = payment_id
-                booking.payment_status = payment.get('status')
-                booking.payment_method = payment.get('payment_method_id')
-                booking.payment_date = datetime.utcnow()
+    try:
+        if payload and payload.get('type') == 'payment' and payload.get('data', {}).get('id'):
+            payment_id = payload['data']['id']
+            
+            # Log para debug
+            print(f"Webhook recebido para payment_id: {payment_id}")
+            print(f"Payload completo: {json.dumps(payload, indent=2, default=str)}")
+            
+            # Inicializar gerenciador de pagamentos
+            payment_manager = PaymentManager()
+            
+            try:
+                # Obter status do pagamento
+                payment = payment_manager.get_payment_status(payment_id)
                 
-                # Se pagamento aprovado, confirmar reserva
-                if payment.get('status') == 'approved':
-                    booking.status = 'Confirmed'
+                # Log para debug
+                print(f"Resposta de status de pagamento: {json.dumps(payment, indent=2, default=str)}")
                 
-                db.session.commit()
-    
-    return jsonify({'status': 'ok'})
+                # Obter ID da reserva a partir da referência externa
+                external_reference = payment.get('external_reference')
+                
+                if external_reference:
+                    try:
+                        booking = Booking.query.get(int(external_reference))
+                        if booking:
+                            # Atualizar status do pagamento
+                            booking.payment_id = payment_id
+                            booking.payment_status = payment.get('status')
+                            booking.payment_method = payment.get('payment_method_id')
+                            booking.payment_date = datetime.utcnow()
+                            
+                            # Se pagamento aprovado, confirmar reserva
+                            if payment.get('status') == 'approved':
+                                booking.status = 'Confirmed'
+                            
+                            db.session.commit()
+                            print(f"Booking {booking.id} atualizado com sucesso. Status: {booking.payment_status}")
+                        else:
+                            print(f"Booking não encontrado para external_reference: {external_reference}")
+                    except ValueError:
+                        print(f"Erro ao converter external_reference para int: {external_reference}")
+                else:
+                    print("External reference não encontrada na resposta do pagamento")
+            except Exception as e:
+                print(f"Erro ao processar status do pagamento: {str(e)}")
+                import traceback
+                print(traceback.format_exc())
+        
+        return jsonify({'status': payment.get('status', 'unknown')})
+    except Exception as e:
+        print(f"Erro no webhook: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({'status': 'error', 'message': str(e)})

@@ -23,7 +23,7 @@
                     <div class="mb-4">
                         <h2 class="h4">Formas de Pagamento</h2>
                         
-                        {% if preference and preference.id and preference.id != "error" %}
+                        {% if preference and preference.get('id') and preference.get('id') != "error" %}
                         <ul class="nav nav-tabs" id="paymentTabs" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="mp-tab" data-bs-toggle="tab" data-bs-target="#mp-content" type="button" role="tab" aria-controls="mp-content" aria-selected="true">Cartão/Boleto</button>
@@ -76,12 +76,12 @@
         locale: 'pt-BR'
     });
 
-    {% if preference and preference.id and preference.id != "error" %}
+    {% if preference and preference.get('id') and preference.get('id') != "error" %}
     // Inicializar checkout
     try {
         mp.checkout({
             preference: {
-                id: '{{ preference.id }}'
+                id: '{{ preference.get('id') }}'
             },
             render: {
                 container: '.cho-container',
@@ -92,7 +92,7 @@
         // Inicializar Wallet Brick (versão simplificada do checkout)
         mp.bricks().create("wallet", "wallet_container", {
             initialization: {
-                preferenceId: "{{ preference.id }}",
+                preferenceId: "{{ preference.get('id') }}",
             },
         });
     } catch (error) {

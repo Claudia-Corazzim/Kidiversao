@@ -24,10 +24,11 @@
                         <h2 class="h4">QR Code PIX</h2>
                         <p class="mb-3">Escaneie o QR Code abaixo com o app do seu banco para pagar</p>
                         
-                        {% if payment and payment.point_of_interaction and payment.point_of_interaction.transaction_data %}
+                        {% if payment and payment.get('point_of_interaction') and payment.get('point_of_interaction', {}).get('transaction_data') %}
                             <!-- QR Code Image -->
                             <div class="mb-3">
-                                <img src="{{ payment.point_of_interaction.transaction_data.qr_code_base64 }}" 
+                                {% set transaction_data = payment.get('point_of_interaction', {}).get('transaction_data', {}) %}
+                                <img src="{{ transaction_data.get('qr_code_base64') }}" 
                                      alt="QR Code PIX" class="img-fluid" style="max-width: 200px;">
                             </div>
                             
@@ -35,7 +36,7 @@
                             <div class="mb-3">
                                 <p class="small text-muted mb-1">Ou copie e cole o código no app do seu banco:</p>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" value="{{ payment.point_of_interaction.transaction_data.qr_code }}" 
+                                    <input type="text" class="form-control" value="{{ transaction_data.get('qr_code', '') }}" 
                                            id="pixCode" readonly>
                                     <button class="btn btn-outline-secondary" type="button" onclick="copyPixCode()">
                                         Copiar
@@ -45,8 +46,8 @@
                             
                             <!-- Payment Info -->
                             <div class="alert alert-info">
-                                <p class="mb-0"><strong>ID do Pagamento:</strong> {{ payment.id }}</p>
-                                <p class="mb-0"><strong>Status:</strong> {{ payment.status }}</p>
+                                <p class="mb-0"><strong>ID do Pagamento:</strong> {{ payment.get('id', 'N/A') }}</p>
+                                <p class="mb-0"><strong>Status:</strong> {{ payment.get('status', 'Desconhecido') }}</p>
                                 <p class="mb-0 small">Após o pagamento, o status será atualizado automaticamente</p>
                             </div>
                         {% else %}
@@ -77,7 +78,7 @@
         alert("Código PIX copiado!");
     }
     
-    {% if payment and payment.id and payment.id != "error" %}
+    {% if payment and payment.get('id') and payment.get('id') != "error" %}
     // Verificar status do pagamento a cada 10 segundos
     function checkPaymentStatus() {
         fetch("{{ url_for('main.payment_webhook') }}", {
@@ -88,7 +89,7 @@
             body: JSON.stringify({
                 type: "payment",
                 data: {
-                    id: "{{ payment.id }}"
+                    id: "{{ payment.get('id', '') }}"
                 }
             })
         })

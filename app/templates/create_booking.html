@@ -1,21 +1,161 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8" />
-    <title>Criar Agendamento - Kidiversão</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h1>➕ Criar Agendamento</h1>
-    <form method="post">
-        <label>ID do Usuário:</label>
-        <input type="number" name="user_id" required><br>
-        <label>ID do Pacote:</label>
-        <input type="number" name="package_id" required><br>
-        <label>Data:</label>
-        <input type="date" name="date" required><br>
-        <button type="submit">Agendar</button>
-    </form>
-    <a href="{{ url_for('main.list_bookings') }}">Voltar</a>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Kidiversão - Criar Agendamento{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row mb-4">
+    <div class="col">
+      <h1 class="display-5 fw-bold"><i class="bi bi-calendar-plus"></i> Criar Agendamento</h1>
+      <p class="lead">Agende aqui uma nova festa para sua criança</p>
+    </div>
+    <div class="col-auto d-flex align-items-center">
+      <a href="{{ url_for('main.list_bookings') }}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Voltar para Agendamentos
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-4">Selecione um pacote e a data</h5>
+          
+          <form method="post" id="bookingForm">
+            <input type="hidden" name="user_id" value="{{ current_user.id }}">
+            
+            <div class="mb-3">
+              <label for="package_id" class="form-label">Pacote</label>
+              <select class="form-select" id="package_id" name="package_id" required>
+                <option value="" selected disabled>Selecione um pacote</option>
+                {% for package in packages %}
+                <option value="{{ package.id }}">{{ package.name }} - R$ {{ package.price }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label for="date" class="form-label">Data do Evento</label>
+              <input type="date" class="form-control" id="date" name="date" required 
+                     min="{{ today }}" placeholder="Selecione a data">
+              <div class="form-text">Selecione a data para a festa</div>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmBookingModal">
+                <i class="bi bi-calendar-check"></i> Confirmar Agendamento
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informações</h5>
+        </div>
+        <div class="card-body">
+          <p>Ao agendar uma festa, você está reservando a data para o pacote escolhido.</p>
+          <p>Você pode ver detalhes e gerenciar seus agendamentos na página de agendamentos.</p>
+          <p>O pagamento deverá ser realizado após a confirmação do agendamento.</p>
+          <hr>
+          <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-telephone-fill me-2 text-primary fs-5"></i>
+            <span>(11) 99999-9999</span>
+          </div>
+          <div class="d-flex align-items-center">
+            <i class="bi bi-envelope-fill me-2 text-primary fs-5"></i>
+            <span>contato@kidiversao.com.br</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmBookingModal" tabindex="-1" aria-labelledby="confirmBookingModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="confirmBookingModalLabel">Confirmar Agendamento</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Você está prestes a agendar uma festa. Por favor, confirme os detalhes:</p>
+        
+        <div class="mb-3">
+          <strong>Pacote:</strong> <span id="packageName">Carregando...</span>
+        </div>
+        
+        <div class="mb-3">
+          <strong>Data:</strong> <span id="eventDate">Carregando...</span>
+        </div>
+        
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i> Após confirmar, você será redirecionado para a página de pagamento.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="submitBooking">
+          <i class="bi bi-check2-circle"></i> Confirmar e Prosseguir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Definir data mínima como hoje
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').setAttribute('min', today);
+    
+    // Atualizar modal com detalhes do agendamento
+    const packageSelect = document.getElementById('package_id');
+    const dateInput = document.getElementById('date');
+    const packageNameSpan = document.getElementById('packageName');
+    const eventDateSpan = document.getElementById('eventDate');
+    
+    // Botão que abre o modal
+    const modalButton = document.querySelector('[data-bs-target="#confirmBookingModal"]');
+    
+    // Atualizar informações no modal antes de abrir
+    modalButton.addEventListener('click', function(e) {
+      // Verificar se formulário está válido
+      const form = document.getElementById('bookingForm');
+      if (!form.checkValidity()) {
+        e.preventDefault();
+        form.reportValidity();
+        return;
+      }
+      
+      // Obter valores selecionados
+      const selectedPackage = packageSelect.options[packageSelect.selectedIndex];
+      const selectedDate = new Date(dateInput.value);
+      
+      // Formatar data para exibição
+      const formattedDate = selectedDate.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      
+      // Atualizar conteúdo do modal
+      packageNameSpan.textContent = selectedPackage.text;
+      eventDateSpan.textContent = formattedDate;
+    });
+    
+    // Submeter formulário quando confirmar no modal
+    document.getElementById('submitBooking').addEventListener('click', function() {
+      document.getElementById('bookingForm').submit();
+    });
+  });
+</script>
+{% endblock %}
