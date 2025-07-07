@@ -507,3 +507,30 @@ def payment_webhook():
         import traceback
         print(traceback.format_exc())
         return jsonify({'status': 'error', 'message': str(e)})
+
+# Cancelar agendamento
+@bp.route('/booking/cancel/<int:booking_id>', methods=['POST'])
+@login_required
+def cancel_booking(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Verificar se o booking pertence ao usuário atual ou se é admin
+    if booking.user_id != current_user.id and not current_user.is_admin:
+        flash('Você não tem permissão para cancelar este agendamento.', 'error')
+        return redirect(url_for('main.list_bookings'))
+    
+    # Verificar status de pagamento - não permitir cancelar se já pago
+    if booking.payment_status == 'approved':
+        flash('Não é possível cancelar um agendamento já pago. Entre em contato com o suporte.', 'error')
+        return redirect(url_for('main.list_bookings'))
+    
+    try:
+        # Excluir o booking
+        db.session.delete(booking)
+        db.session.commit()
+        flash('Agendamento cancelado com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao cancelar agendamento: {str(e)}', 'error')
+    
+    return redirect(url_for('main.list_bookings'))
