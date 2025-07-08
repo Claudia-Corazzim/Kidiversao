@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+s{% extends "base.html" %}
 
 {% block title %}Agendamentos - Kidiversão{% endblock %}
 
@@ -20,7 +20,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>ID</th>
-                                        <th>Serviço</th>
+                                        <th>Serviço/Pacote</th>
                                         <th>Data do Evento</th>
                                         <th>Status</th>
                                         <th>Pagamento</th>
@@ -32,7 +32,11 @@
                                     <tr>
                                         <td>{{ booking.id }}</td>
                                         <td>
-                                            {% if booking.service %}
+                                            {% if booking.package %}
+                                                <span class="badge bg-info">Pacote</span>
+                                                {{ booking.package.name }}
+                                            {% elif booking.service %}
+                                                <span class="badge bg-secondary">Serviço</span>
                                                 {{ booking.service.name }}
                                             {% else %}
                                                 Não disponível
@@ -70,43 +74,12 @@
                                                     <i class="bi bi-credit-card"></i> Pagar
                                                 </a>
                                                 
-                                                <button type="button" class="btn btn-sm btn-danger" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#cancelBookingModal{{ booking.id }}">
-                                                    <i class="bi bi-x-circle"></i> Cancelar
-                                                </button>
-                                                
-                                                <!-- Modal de Confirmação de Cancelamento -->
-                                                <div class="modal fade" id="cancelBookingModal{{ booking.id }}" tabindex="-1" aria-hidden="true">
-                                                  <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                      <div class="modal-header bg-danger text-white">
-                                                        <h5 class="modal-title">Confirmar Cancelamento</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                      </div>
-                                                      <div class="modal-body">
-                                                        <p>Tem certeza que deseja cancelar este agendamento?</p>
-                                                        <p><strong>Serviço:</strong> 
-                                                          {% if booking.service %}
-                                                              {{ booking.service.name }}
-                                                          {% else %}
-                                                              Não disponível
-                                                          {% endif %}
-                                                        </p>
-                                                        <p><strong>Data:</strong> {{ booking.event_date.strftime('%d/%m/%Y') }}</p>
-                                                        <div class="alert alert-warning">
-                                                          <i class="bi bi-exclamation-triangle"></i> Esta ação não pode ser desfeita.
-                                                        </div>
-                                                      </div>
-                                                      <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
-                                                        <form action="{{ url_for('main.cancel_booking', booking_id=booking.id) }}" method="POST">
-                                                          <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
-                                                        </form>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                </div>
+                                                <form action="{{ url_for('main.cancel_booking', booking_id=booking.id) }}" method="POST" class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.')">
+                                                        <i class="bi bi-x-circle"></i> Cancelar
+                                                    </button>
+                                                </form>
                                             {% else %}
                                                 <button class="btn btn-sm btn-success" disabled>
                                                     <i class="bi bi-check-circle"></i> Pago

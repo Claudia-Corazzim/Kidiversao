@@ -121,17 +121,14 @@ def create_package():
     if request.method == 'POST':
         name = request.form['name']
         descricao = request.form.get('description', '')
-        
-        # Se o usuário estiver logado, associa o pacote ao usuário atual
-        user_id = None
-        if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated:
-            user_id = current_user.id
+        user_id = current_user.id
         
         new_package = Package(name=name, descricao=descricao, user_id=user_id)
         db.session.add(new_package)
         db.session.commit()
-        flash('Pacote criado com sucesso!', 'success')
-        return redirect(url_for('main.list_packages'))
+        
+        flash('Pacote criado com sucesso! Agora adicione serviços ao pacote.', 'success')
+        return redirect(url_for('main.package_items', package_id=new_package.id))
     return render_template('create_package.html')
 
 # Editar pacote
@@ -140,15 +137,30 @@ def create_package():
 def edit_package(package_id):
     package = Package.query.get_or_404(package_id)
     
+    # Obter serviços disponíveis para adicionar ao pacote
+    services = Service.query.all()
+    
+    # Obter itens existentes no pacote
+    package_items = PackageItem.query.filter_by(package_id=package_id).all()
+    
     if request.method == 'POST':
         package.name = request.form['name']
         package.descricao = request.form.get('description', '')
         
+        # Atualizar o preço total baseado nos itens (opcional)
+        if not package.total_price or package.total_price == 0:
+            total = 0
+            for item in package_items:
+                service = Service.query.get(item.service_id)
+                if service:
+                    total += float(service.price) * item.quantity
+            package.total_price = total
+        
         db.session.commit()
         flash('Pacote atualizado com sucesso!', 'success')
-        return redirect(url_for('main.list_packages'))
+        return redirect(url_for('main.package_items', package_id=package_id))
     
-    return render_template('edit_package.html', package=package)
+    return render_template('edit_package.html', package=package, services=services, package_items=package_items)
 
 # Excluir pacote
 @bp.route('/package/delete/<int:package_id>', methods=['POST'])
@@ -180,19 +192,77 @@ def list_bookings():
 def create_booking():
     if request.method == 'POST':
         user_id = request.form['user_id']
-        package_id = request.form['package_id']
+        booking_type = request.form.get('booking_type', 'service')
         date = request.form['date']  # Exemplo: '2025-07-10'
 
-        new_booking = Booking(user_id=user_id, package_id=package_id, date=date)
+        # Criar booking baseado no tipo (serviço ou pacote)
+        if booking_type == 'service':
+            service_id = request.form['service_id']
+            service = Service.query.get_or_404(service_id)
+            
+            new_booking = Booking(
+                user_id=user_id,
+                service_id=service_id,
+                package_id=None,  # Explicitamente definido como None para agendamentos de serviço
+                event_date=date,
+                status='Pending',
+                total_amount=service.price
+            )
+            
+        else:  # package
+            package_id = request.form['package_id']
+            package = Package.query.get_or_404(package_id)
+            
+            # Verificamos se o pacote tem algum serviço associado
+            package_items = PackageItem.query.filter_by(package_id=package_id).all()
+            
+            if package_items:
+                # Se tem serviço associado, usamos o primeiro
+                service_id = package_items[0].service_id
+            else:
+                # Se não tem serviço associado, verificamos se existe algum serviço no sistema
+                default_service = Service.query.first()
+                
+                if default_service:
+                    service_id = default_service.id
+                    # Adicionamos esse serviço ao pacote para futuras referências
+                    new_package_item = PackageItem(
+                        package_id=package_id,
+                        service_id=service_id,
+                        quantity=1
+                    )
+                    db.session.add(new_package_item)
+                    
+                    # Atualizar o preço total do pacote se necessário
+                    if not package.total_price or package.total_price == 0:
+                        package.total_price = float(default_service.price)
+                    
+                    db.session.commit()
+                    flash('Um serviço padrão foi adicionado ao pacote automaticamente.', 'info')
+                else:
+                    # Se não houver nenhum serviço no sistema
+                    flash('Não há serviços disponíveis no sistema. Por favor, crie serviços primeiro.', 'error')
+                    return redirect(url_for('main.create_booking'))
+            
+            new_booking = Booking(
+                user_id=user_id,
+                service_id=service_id,
+                package_id=package_id,  # Guardamos a referência ao pacote
+                event_date=date,
+                status='Pending',
+                total_amount=package.total_price or 0
+            )
+        
         db.session.add(new_booking)
         db.session.commit()
         flash('Agendamento realizado com sucesso!', 'success')
-        return redirect(url_for('main.list_bookings'))
+        return redirect(url_for('main.payment', booking_id=new_booking.id))
     
     # Pegar a data de hoje para definir a data mínima no formulário
     today = datetime.now().strftime('%Y-%m-%d')
     packages = Package.query.all()
-    return render_template('create_booking.html', packages=packages, today=today)
+    services = Service.query.all()
+    return render_template('create_booking.html', packages=packages, services=services, today=today)
 
 @bp.route('/admin')
 @login_required
@@ -213,6 +283,7 @@ def book_service(service_id):
         booking = Booking(
             user_id=current_user.id, 
             service_id=service.id, 
+            package_id=None,  # Explicitamente definido como None para agendamentos de serviço
             event_date=event_date,
             status='Pending',
             total_amount=service.price
@@ -326,14 +397,33 @@ def payment(booking_id):
     else:
         base_url = request.scheme + '://' + request.headers.get('Host', '')
     
-    # Debug: Imprimir informações sobre o booking e service
+    # Debug: Imprimir informações sobre o booking
     print(f"Booking ID: {booking.id}, User ID: {booking.user_id}, Service ID: {booking.service_id}")
-    print(f"Service Name: {service.name}, Price: {service.price}, Description: {service.description}")
+    
+    # Verificar se o agendamento é de um pacote ou serviço individual
+    if booking.package_id:
+        package = Package.query.get_or_404(booking.package_id)
+        item_name = f"Pacote: {package.name}"
+        item_description = package.descricao or f"Pacote de serviços incluindo {service.name}"
+        item_price = package.total_price or service.price
+        print(f"Package Name: {package.name}, Price: {item_price}, Description: {package.descricao}")
+    else:
+        item_name = f"Serviço: {service.name}"
+        item_description = service.description or "Serviço individual"
+        item_price = service.price
+        print(f"Service Name: {service.name}, Price: {service.price}, Description: {service.description}")
+    
     print(f"Base URL: {base_url}")
     
     try:
-        # Criar preferência de pagamento
-        preference = payment_manager.create_preference(booking, service, base_url)
+        # Criar preferência de pagamento com informações contextuais
+        preference = payment_manager.create_preference_with_context(
+            booking, 
+            item_name,
+            item_description,
+            item_price,
+            base_url
+        )
         
         # Debug: Imprimir a preferência retornada
         print(f"Preference returned: {json.dumps(preference, indent=2, default=str)}")
@@ -347,7 +437,7 @@ def payment(booking_id):
         
         # Salvar ID da preferência
         booking.payment_preference_id = preference["id"]
-        booking.total_amount = service.price
+        booking.total_amount = item_price
         db.session.commit()
         
         # Renderizar página de pagamento
@@ -547,14 +637,21 @@ def cancel_booking(booking_id):
         return redirect(url_for('main.list_bookings'))
     
     try:
+        # Log antes da exclusão
+        print(f"Tentando excluir o agendamento {booking_id}...")
+        
         # Excluir o booking (sem logs excessivos)
         db.session.delete(booking)
         db.session.commit()
+        
+        print(f"Agendamento {booking_id} excluído com sucesso!")
         flash('Agendamento cancelado com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
-        # Log simplificado
-        print(f"Erro ao cancelar agendamento {booking_id}: {str(e)}")
+        # Log detalhado do erro
+        import traceback
+        print(f"ERRO ao cancelar agendamento {booking_id}: {str(e)}")
+        print(traceback.format_exc())
         flash(f'Erro ao cancelar agendamento: {str(e)}', 'error')
     
     return redirect(url_for('main.list_bookings'))
@@ -585,3 +682,105 @@ def contact():
             flash(msg, 'error')
             
     return render_template('contact.html')
+
+# Gerenciar itens de um pacote
+@bp.route('/package/<int:package_id>/items', methods=['GET', 'POST'])
+@login_required
+def package_items(package_id):
+    package = Package.query.get_or_404(package_id)
+    services = Service.query.all()
+    
+    # Obter itens existentes no pacote
+    package_items = PackageItem.query.filter_by(package_id=package_id).all()
+    
+    if request.method == 'POST':
+        # Adicionar novo item ao pacote
+        service_id = request.form.get('service_id')
+        quantity = int(request.form.get('quantity', 1))
+        
+        if service_id:
+            # Verificar se o serviço já está no pacote
+            existing_item = PackageItem.query.filter_by(
+                package_id=package_id, 
+                service_id=service_id
+            ).first()
+            
+            if existing_item:
+                # Atualizar quantidade se já existir
+                existing_item.quantity = quantity
+                flash('Quantidade do serviço atualizada no pacote.', 'success')
+            else:
+                # Adicionar novo item
+                new_item = PackageItem(
+                    package_id=package_id,
+                    service_id=service_id,
+                    quantity=quantity
+                )
+                db.session.add(new_item)
+                flash('Serviço adicionado ao pacote com sucesso!', 'success')
+            
+            # Atualizar preço total do pacote
+            service = Service.query.get(service_id)
+            if service:
+                # Inicializar o preço total se for nulo
+                if not package.total_price:
+                    package.total_price = 0
+                
+                # Recalcular preço total somando todos os itens
+                total = 0
+                
+                # Adicionar os itens existentes ao total (exceto o que acabamos de adicionar)
+                for item in package_items:
+                    item_service = Service.query.get(item.service_id)
+                    if item_service:
+                        total += float(item_service.price) * item.quantity
+                
+                # Adicionar o novo item ao preço (ou sua atualização)
+                if existing_item:
+                    # Se atualizamos um item existente, ele já está incluído na soma acima
+                    pass
+                else:
+                    # Se é um novo item, adicionar ao total
+                    total += float(service.price) * quantity
+                
+                package.total_price = total
+            
+            db.session.commit()
+        
+        return redirect(url_for('main.package_items', package_id=package_id))
+    
+    return render_template('package_items.html', 
+                          package=package, 
+                          services=services, 
+                          package_items=package_items)
+
+# Remover item de um pacote
+@bp.route('/package/<int:package_id>/remove_item/<int:item_id>', methods=['POST'])
+@login_required
+def remove_package_item(package_id, item_id):
+    package = Package.query.get_or_404(package_id)
+    item = PackageItem.query.get_or_404(item_id)
+    
+    # Verificar se o item pertence ao pacote
+    if item.package_id != package_id:
+        flash('Item não pertence a este pacote.', 'error')
+        return redirect(url_for('main.package_items', package_id=package_id))
+    
+    # Verificar se é o último item do pacote
+    remaining_items = PackageItem.query.filter_by(package_id=package_id).count()
+    if remaining_items <= 1:
+        flash('Atenção: este é o último serviço do pacote. Se você remover, não será possível agendar este pacote até que adicione pelo menos um serviço.', 'warning')
+    
+    # Recalcular o preço do pacote
+    service = Service.query.get(item.service_id)
+    if service and package.total_price:
+        package.total_price = float(package.total_price) - (float(service.price) * item.quantity)
+        if package.total_price < 0:
+            package.total_price = 0
+    
+    # Remover o item
+    db.session.delete(item)
+    db.session.commit()
+    
+    flash('Item removido do pacote com sucesso!', 'success')
+    return redirect(url_for('main.package_items', package_id=package_id))

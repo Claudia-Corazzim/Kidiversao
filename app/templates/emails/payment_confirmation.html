@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Confirmado - Kidiversão</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            margin: 0;
+            padding: 0;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 0;
+            border: 1px solid #f0f0f0; 
+        }
+        .header { 
+            background-color: #4ecdc4; /* Verde para diferenciar do email de agendamento */
+            color: white; 
+            padding: 20px; 
+            text-align: center; 
+        }
+        .content { 
+            padding: 30px; 
+            background-color: #ffffff;
+        }
+        .payment-details { 
+            background-color: #f8f8f8; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 5px; 
+        }
+        .success-badge {
+            background-color: #28a745;
+            color: white;
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .footer { 
+            background-color: #f8f9fa; 
+            padding: 20px; 
+            text-align: center; 
+            font-size: 14px; 
+            color: #666;
+        }
+        .btn { 
+            display: inline-block; 
+            padding: 12px 25px; 
+            background-color: #4ecdc4; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .social-links {
+            margin-top: 15px;
+        }
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #4ecdc4;
+            text-decoration: none;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table td {
+            padding: 8px;
+        }
+        .label {
+            font-weight: bold;
+            width: 40%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kidiversão</h1>
+            <p>Transformando festas infantis em momentos inesquecíveis!</p>
+        </div>
+        
+        <div class="content">
+            <h2>Olá {{ user.username }},</h2>
+            <p>Seu pagamento foi processado com sucesso! <span class="success-badge">CONFIRMADO</span></p>
+            
+            <div class="payment-details">
+                <h3>Detalhes do Pagamento:</h3>
+                <table>
+                    <tr>
+                        <td class="label">Serviço:</td>
+                        <td>{{ service.name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Data do evento:</td>
+                        <td>{{ booking.event_date.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Valor:</td>
+                        <td>R$ {{ "%.2f"|format(booking.total_amount) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Método de pagamento:</td>
+                        <td>{{ booking.payment_method or "Não informado" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Data do pagamento:</td>
+                        <td>{{ booking.payment_date.strftime('%d/%m/%Y %H:%M') if booking.payment_date else "Não informado" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Status:</td>
+                        <td>Confirmado</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <p>Sua reserva está garantida! Preparamos uma experiência incrível para o seu evento.</p>
+            
+            <p>Informações importantes:</p>
+            <ul>
+                <li>Nossa equipe entrará em contato alguns dias antes do evento para confirmar detalhes.</li>
+                <li>Caso precise fazer alterações, entre em contato com pelo menos 72 horas de antecedência.</li>
+                <li>Sugerimos chegar com 30 minutos de antecedência no dia do evento.</li>
+            </ul>
+            
+            <p>Se tiver alguma dúvida, entre em contato conosco pelos seguintes canais:</p>
+            <p>
+                <strong>Telefone:</strong> (11) 4567-8901<br>
+                <strong>WhatsApp:</strong> (11) 94567-8901<br>
+                <strong>Email:</strong> contato@kidiversao.com.br
+            </p>
+            
+            <p>
+                <a href="https://kidiversao.com.br/bookings" class="btn">Ver Meus Agendamentos</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2025 Kidiversão. Todos os direitos reservados.</p>
+            <div class="social-links">
+                <a href="https://www.facebook.com/profile.php?id=61577869483972&locale=pt_BR">Facebook</a> | 
+                <a href="https://www.instagram.com/ach_adinhosclau?igsh=MnEwcTF1a215cXNq">Instagram</a>
+            </div>
+            <p>Rua das Crianças, 123, Bairro Feliz, São Paulo - SP</p>
+        </div>
+    </div>
+</body>
+</html>

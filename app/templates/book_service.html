@@ -31,6 +31,7 @@
                     </div>
 
                     <form method="POST" action="{{ url_for('main.book_service', service_id=service.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="mb-3">
                             <label for="event_date" class="form-label">Data do Evento</label>
                             <input type="date" class="form-control" id="event_date" name="event_date" required

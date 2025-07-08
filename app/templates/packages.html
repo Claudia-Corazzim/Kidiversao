@@ -3,11 +3,24 @@
 {% block title %}Kidiversão - Pacotes{% endblock %}
 
 {% block content %}
-    <h1 class="text-center mb-4">🎁 Nossos Pacotes</h1>
-    
-    <div class="mb-4 d-flex justify-content-center">
-        <a href="{{ url_for('main.create_package') }}" class="btn btn-primary">➕ Criar Pacote</a>
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 fw-bold"><i class="bi bi-box-seam"></i> Pacotes de Serviços</h1>
+            <p class="lead">Gerencie seus pacotes para festas</p>
+        </div>
+        <div class="col-auto d-flex align-items-center">
+            <a href="{{ url_for('main.create_package') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Criar Novo Pacote
+            </a>
+        </div>
     </div>
+    
+    {% if not packages %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill"></i> Nenhum pacote cadastrado. Clique em "Criar Novo Pacote" para começar.
+    </div>
+    {% endif %}
     
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for package in packages %}
@@ -16,16 +29,35 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ package.name }}</h5>
                         <p class="card-text">{{ package.descricao }}</p>
+                        
                         {% if package.total_price %}
-                            <h6 class="card-subtitle mb-3 text-success">R$ {{ package.total_price }}</h6>
+                            <h6 class="card-subtitle mb-3 text-success">Preço Total: R$ {{ package.total_price }}</h6>
+                        {% else %}
+                            <h6 class="card-subtitle mb-3 text-muted">Preço: Não definido</h6>
+                        {% endif %}
+                        
+                        {% set has_items = package.items|length > 0 %}
+                        {% if not has_items %}
+                            <div class="alert alert-warning mb-3">
+                                <i class="bi bi-exclamation-triangle-fill"></i> Este pacote não possui serviços. 
+                                Adicione serviços para que possa ser agendado.
+                            </div>
                         {% endif %}
                         
                         <div class="d-grid gap-2 mt-3">
-                            <a href="#" class="btn btn-warning btn-sm">Ver Detalhes</a>
+                            <a href="{{ url_for('main.package_items', package_id=package.id) }}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-list-check"></i> Gerenciar Serviços
+                            </a>
                             <div class="d-flex gap-2">
-                                <a href="{{ url_for('main.edit_package', package_id=package.id) }}" class="btn btn-info btn-sm flex-grow-1">Editar</a>
-                                <form method="post" action="{{ url_for('main.delete_package', package_id=package.id) }}" class="flex-grow-1" onsubmit="return confirm('Tem certeza que deseja excluir este pacote?');">
-                                    <button type="submit" class="btn btn-danger btn-sm w-100">Excluir</button>
+                                <a href="{{ url_for('main.edit_package', package_id=package.id) }}" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+                                <form method="post" action="{{ url_for('main.delete_package', package_id=package.id) }}" class="flex-grow-1" 
+                                      onsubmit="return confirm('Tem certeza que deseja excluir este pacote?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                        <i class="bi bi-trash"></i> Excluir
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -34,4 +66,5 @@
             </div>
         {% endfor %}
     </div>
+</div>
 {% endblock %}

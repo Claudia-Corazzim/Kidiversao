@@ -11,6 +11,7 @@
           <h2 class="card-title text-center mb-4">Criar Conta</h2>
           
           <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="mb-3">
               <label for="username" class="form-label">Nome de usuário</label>
               <input type="text" class="form-control" id="username" name="username" placeholder="Escolha um nome de usuário" required>

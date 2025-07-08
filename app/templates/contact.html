@@ -89,6 +89,7 @@
                                 <h3 class="h5 mb-4">Envie uma Mensagem</h3>
                                 
                                 <form action="{{ url_for('main.contact') }}" method="post">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <div class="mb-3">
                                         <label for="name" class="form-label">Nome</label>
                                         <input type="text" class="form-control" id="name" name="name" required>

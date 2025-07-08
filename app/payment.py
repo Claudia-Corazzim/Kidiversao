@@ -271,3 +271,28 @@ class PaymentManager:
                 "error_message": str(e),
                 "point_of_interaction": None
             }
+    
+    def create_preference_with_context(self, booking, item_name, item_description, item_price, base_url):
+        """
+        Criar uma preferência de pagamento no Mercado Pago com contexto personalizado
+        
+        Args:
+            booking: objeto Booking
+            item_name: Nome do item (serviço ou pacote)
+            item_description: Descrição do item
+            item_price: Preço do item
+            base_url: URL base para redirecionamentos
+            
+        Returns:
+            dict: Resposta do Mercado Pago contendo init_point e outras informações
+        """
+        from app.mercado_pago_service import MercadoPagoService
+        
+        # Usar o novo método do serviço que aceita parâmetros de contexto
+        return MercadoPagoService.criar_preferencia_com_contexto(
+            booking, 
+            item_name, 
+            item_description, 
+            item_price, 
+            base_url
+        )

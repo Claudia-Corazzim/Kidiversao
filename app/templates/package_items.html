@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Itens do Pacote - Kidiversão{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3"><i class="bi bi-box"></i> Gerenciar Itens: {{ package.name }}</h1>
+            <p class="text-muted">Adicione ou remova serviços deste pacote</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('main.list_packages') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar para Pacotes
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Formulário para adicionar serviços -->
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0">Adicionar Serviço</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('main.package_items', package_id=package.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <div class="mb-3">
+                            <label for="service_id" class="form-label">Serviço</label>
+                            <select class="form-select" id="service_id" name="service_id" required>
+                                <option value="" selected disabled>Selecione um serviço</option>
+                                {% for service in services %}
+                                <option value="{{ service.id }}">{{ service.name }} - R$ {{ service.price }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Quantidade</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" min="1" value="1" required>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-lg"></i> Adicionar ao Pacote
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Informações do Pacote -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h2 class="h5 mb-0">Detalhes do Pacote</h2>
+                </div>
+                <div class="card-body">
+                    <p><strong>Nome:</strong> {{ package.name }}</p>
+                    <p><strong>Descrição:</strong> {{ package.descricao or 'Sem descrição' }}</p>
+                    <p><strong>Preço Total:</strong> R$ {{ package.total_price or '0.00' }}</p>
+                    
+                    <div class="d-grid mt-3">
+                        <a href="{{ url_for('main.edit_package', package_id=package.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Editar Detalhes do Pacote
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de serviços no pacote -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0">Serviços no Pacote</h2>
+                </div>
+                <div class="card-body">
+                    {% if package_items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Serviço</th>
+                                        <th>Preço Unitário</th>
+                                        <th>Quantidade</th>
+                                        <th>Subtotal</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in package_items %}
+                                    <tr>
+                                        <td>
+                                            {% if item.service %}
+                                                {{ item.service.name }}
+                                            {% else %}
+                                                Serviço não encontrado
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if item.service %}
+                                                R$ {{ item.service.price }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>
+                                            {% if item.service %}
+                                                R$ {{ (item.service.price|float * item.quantity)|round(2) }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <form action="{{ url_for('main.remove_package_item', package_id=package.id, item_id=item.id) }}" method="post" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja remover este item?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <p class="mb-0">Este pacote ainda não possui serviços. Adicione serviços utilizando o formulário ao lado.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

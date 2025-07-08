@@ -3,29 +3,68 @@
 {% block title %}Kidiversão - Criar Pacote{% endblock %}
 
 {% block content %}
-    <h1 class="text-center mb-4">➕ Criar Pacote</h1>
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 fw-bold"><i class="bi bi-box"></i> Criar Pacote</h1>
+            <p class="lead">Crie um novo pacote de serviços para festas</p>
+        </div>
+        <div class="col-auto d-flex align-items-center">
+            <a href="{{ url_for('main.list_packages') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Voltar para Pacotes
+            </a>
+        </div>
+    </div>
     
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
                 <div class="card-body">
                     <form method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="mb-3">
-                            <label for="name" class="form-label">Nome:</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
+                            <label for="name" class="form-label">Nome do Pacote:</label>
+                            <input type="text" class="form-control" id="name" name="name" required 
+                                   placeholder="Ex: Pacote Completo, Pacote Básico...">
                         </div>
                         
                         <div class="mb-3">
                             <label for="description" class="form-label">Descrição:</label>
-                            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Descreva o pacote em detalhes..."></textarea>
+                            <textarea class="form-control" id="description" name="description" rows="4" 
+                                      placeholder="Descreva o pacote em detalhes..."></textarea>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <p><i class="bi bi-info-circle-fill"></i> <strong>Importante:</strong> Após criar o pacote, você precisará adicionar serviços a ele para que possa ser agendado.</p>
                         </div>
                         
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Criar Pacote</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Criar Pacote
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Como Funciona</h5>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li class="mb-2">Crie o pacote com nome e descrição</li>
+                        <li class="mb-2">Adicione serviços ao pacote na próxima tela</li>
+                        <li class="mb-2">O preço total será calculado automaticamente</li>
+                        <li>Os pacotes ficam disponíveis para agendamento</li>
+                    </ol>
+                    <hr>
+                    <p class="mb-0"><i class="bi bi-exclamation-triangle text-warning"></i> Lembre-se: Um pacote <strong>precisa ter pelo menos um serviço</strong> para poder ser agendado.</p>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 {% endblock %}

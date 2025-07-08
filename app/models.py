@@ -42,6 +42,7 @@ class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=False, index=True)
+    package_id = db.Column(db.Integer, db.ForeignKey('package.id'), nullable=True, index=True)
     event_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(50), default='Pending')
     # Campos para pagamento
@@ -58,6 +59,7 @@ class Package(db.Model):
     name = db.Column(db.String(100))
     total_price = db.Column(db.Numeric)
     items = db.relationship('PackageItem', backref='package', lazy=True)
+    bookings = db.relationship('Booking', backref='package', lazy=True)
     descricao = db.Column(db.String(1000))
 
 class PackageItem(db.Model):

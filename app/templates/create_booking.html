@@ -20,17 +20,39 @@
     <div class="col-md-8">
       <div class="card shadow-sm">
         <div class="card-body">
-          <h5 class="card-title mb-4">Selecione um pacote e a data</h5>
+          <h5 class="card-title mb-4">Selecione um serviço ou pacote e a data</h5>
           
           <form method="post" id="bookingForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="user_id" value="{{ current_user.id }}">
             
             <div class="mb-3">
+              <label class="form-label">Tipo de Reserva</label>
+              <div class="btn-group w-100" role="group" aria-label="Tipo de Reserva">
+                <input type="radio" class="btn-check" name="booking_type" id="booking_type_service" value="service" checked>
+                <label class="btn btn-outline-primary" for="booking_type_service">Serviço Individual</label>
+                
+                <input type="radio" class="btn-check" name="booking_type" id="booking_type_package" value="package">
+                <label class="btn btn-outline-primary" for="booking_type_package">Pacote Completo</label>
+              </div>
+            </div>
+            
+            <div class="mb-3" id="service_selection">
+              <label for="service_id" class="form-label">Serviço</label>
+              <select class="form-select" id="service_id" name="service_id">
+                <option value="" selected disabled>Selecione um serviço</option>
+                {% for service in services %}
+                <option value="{{ service.id }}" data-price="{{ service.price }}">{{ service.name }} - R$ {{ service.price }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="mb-3 d-none" id="package_selection">
               <label for="package_id" class="form-label">Pacote</label>
-              <select class="form-select" id="package_id" name="package_id" required>
+              <select class="form-select" id="package_id" name="package_id">
                 <option value="" selected disabled>Selecione um pacote</option>
                 {% for package in packages %}
-                <option value="{{ package.id }}">{{ package.name }} - R$ {{ package.price }}</option>
+                <option value="{{ package.id }}">{{ package.name }} - R$ {{ package.total_price }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -43,7 +65,7 @@
             </div>
             
             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmBookingModal">
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmServiceModal">
                 <i class="bi bi-calendar-check"></i> Confirmar Agendamento
               </button>
             </div>
@@ -76,23 +98,23 @@
   </div>
 </div>
 
-<!-- Modal de Confirmação -->
-<div class="modal fade" id="confirmBookingModal" tabindex="-1" aria-labelledby="confirmBookingModalLabel" aria-hidden="true">
+<!-- Modal de Confirmação para Serviço -->
+<div class="modal fade" id="confirmServiceModal" tabindex="-1" aria-labelledby="confirmServiceModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="confirmBookingModalLabel">Confirmar Agendamento</h5>
+        <h5 class="modal-title" id="confirmServiceModalLabel">Confirmar Agendamento de Serviço</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
-        <p>Você está prestes a agendar uma festa. Por favor, confirme os detalhes:</p>
+        <p>Você está prestes a agendar um <strong>serviço individual</strong>. Por favor, confirme os detalhes:</p>
         
         <div class="mb-3">
-          <strong>Pacote:</strong> <span id="packageName">Carregando...</span>
+          <strong>Serviço:</strong> <span id="serviceName">Carregando...</span>
         </div>
         
         <div class="mb-3">
-          <strong>Data:</strong> <span id="eventDate">Carregando...</span>
+          <strong>Data:</strong> <span id="serviceEventDate">Carregando...</span>
         </div>
         
         <div class="alert alert-info">
@@ -101,7 +123,40 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="submitBooking">
+        <button type="button" class="btn btn-primary" id="submitServiceBooking">
+          <i class="bi bi-check2-circle"></i> Confirmar e Prosseguir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação para Pacote -->
+<div class="modal fade" id="confirmPackageModal" tabindex="-1" aria-labelledby="confirmPackageModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="confirmPackageModalLabel">Confirmar Agendamento de Pacote</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Você está prestes a agendar um <strong>pacote completo</strong>. Por favor, confirme os detalhes:</p>
+        
+        <div class="mb-3">
+          <strong>Pacote:</strong> <span id="packageName">Carregando...</span>
+        </div>
+        
+        <div class="mb-3">
+          <strong>Data:</strong> <span id="packageEventDate">Carregando...</span>
+        </div>
+        
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i> Após confirmar, você será redirecionado para a página de pagamento.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="submitPackageBooking">
           <i class="bi bi-check2-circle"></i> Confirmar e Prosseguir
         </button>
       </div>
@@ -117,14 +172,42 @@
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('date').setAttribute('min', today);
     
-    // Atualizar modal com detalhes do agendamento
+    // Elementos de seleção
+    const serviceSelection = document.getElementById('service_selection');
+    const packageSelection = document.getElementById('package_selection');
+    const serviceSelect = document.getElementById('service_id');
     const packageSelect = document.getElementById('package_id');
+    const bookingTypeService = document.getElementById('booking_type_service');
+    const bookingTypePackage = document.getElementById('booking_type_package');
+    
+    // Toggle entre serviço e pacote
+    bookingTypeService.addEventListener('change', function() {
+      if (this.checked) {
+        serviceSelection.classList.remove('d-none');
+        packageSelection.classList.add('d-none');
+        serviceSelect.setAttribute('required', '');
+        packageSelect.removeAttribute('required');
+      }
+    });
+    
+    bookingTypePackage.addEventListener('change', function() {
+      if (this.checked) {
+        packageSelection.classList.remove('d-none');
+        serviceSelection.classList.add('d-none');
+        packageSelect.setAttribute('required', '');
+        serviceSelect.removeAttribute('required');
+      }
+    });
+    
+    // Atualizar modal com detalhes do agendamento
     const dateInput = document.getElementById('date');
+    const serviceNameSpan = document.getElementById('serviceName');
     const packageNameSpan = document.getElementById('packageName');
-    const eventDateSpan = document.getElementById('eventDate');
+    const serviceEventDateSpan = document.getElementById('serviceEventDate');
+    const packageEventDateSpan = document.getElementById('packageEventDate');
     
     // Botão que abre o modal
-    const modalButton = document.querySelector('[data-bs-target="#confirmBookingModal"]');
+    const modalButton = document.querySelector('[data-bs-target="#confirmServiceModal"]');
     
     // Atualizar informações no modal antes de abrir
     modalButton.addEventListener('click', function(e) {
@@ -137,7 +220,15 @@
       }
       
       // Obter valores selecionados
-      const selectedPackage = packageSelect.options[packageSelect.selectedIndex];
+      const bookingType = document.querySelector('input[name="booking_type"]:checked').value;
+      let selectedItem;
+      
+      if (bookingType === 'service') {
+        selectedItem = serviceSelect.options[serviceSelect.selectedIndex];
+      } else {
+        selectedItem = packageSelect.options[packageSelect.selectedIndex];
+      }
+      
       const selectedDate = new Date(dateInput.value);
       
       // Formatar data para exibição
@@ -148,12 +239,21 @@
       });
       
       // Atualizar conteúdo do modal
-      packageNameSpan.textContent = selectedPackage.text;
-      eventDateSpan.textContent = formattedDate;
+      if (bookingType === 'service') {
+        serviceNameSpan.textContent = selectedItem ? selectedItem.text : 'Nenhum item selecionado';
+        serviceEventDateSpan.textContent = formattedDate;
+      } else {
+        packageNameSpan.textContent = selectedItem ? selectedItem.text : 'Nenhum item selecionado';
+        packageEventDateSpan.textContent = formattedDate;
+      }
     });
     
     // Submeter formulário quando confirmar no modal
-    document.getElementById('submitBooking').addEventListener('click', function() {
+    document.getElementById('submitServiceBooking').addEventListener('click', function() {
+      document.getElementById('bookingForm').submit();
+    });
+    
+    document.getElementById('submitPackageBooking').addEventListener('click', function() {
       document.getElementById('bookingForm').submit();
     });
   });
