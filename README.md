@@ -1,7 +1,6 @@
 # Kidiversão - Sistema de Gerenciamento de Festas Infantis
-Desenvolvimento de um software com framrwork web que utilize banco de dados inclua script web (Javascript), nuvem, uso de API, acessibilidade, controle de versões e testes.
 
-Desenvolvimento de um sistema web com framework Flask que utiliza banco de dados PostgreSQL, JavaScript, autenticação de usuários, e interfaces responsivas com Bootstrap.
+Desenvolvimento de um software com framework web que utiliza banco de dados, inclui script web (Javascript), nuvem, uso de API, acessibilidade, controle de versões e testes.
 
 ## 📋 Descrição
 
@@ -17,6 +16,17 @@ O Kidiversão é um sistema web para gerenciamento de serviços e pacotes para f
 - **Interface Responsiva**: Design adaptável a diferentes dispositivos usando Bootstrap.
 - **Flash Messages**: Feedback visual para operações realizadas no sistema.
 - **Acessibilidade**: Implementações seguindo diretrizes WCAG para garantir inclusão digital.
+
+## 🎯 Requisitos Atendidos
+
+- ✅ **Framework Web**: Flask (Python)
+- ✅ **Banco de Dados**: PostgreSQL com SQLAlchemy
+- ✅ **JavaScript**: Interatividade e validação de formulários
+- ✅ **Nuvem**: Deploy na plataforma Render
+- ✅ **API**: Integração com API do Mercado Pago
+- ✅ **Acessibilidade**: WCAG 2.1 AA compliance
+- ✅ **Controle de Versões**: Git/GitHub
+- ✅ **Testes**: Testes automatizados com Pytest
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -137,6 +147,42 @@ A integração com o Mercado Pago permite:
 5. **Notificações em Tempo Real**: Webhook para atualizações automáticas
 
 Para testar pagamentos no ambiente de desenvolvimento, utilize os [cartões de teste](https://www.mercadopago.com.br/developers/pt/docs/checkout-api/test-integration) fornecidos pelo Mercado Pago.
+
+## 🌐 Deploy em Nuvem
+
+O projeto está hospedado na plataforma Render:
+- **URL**: [https://kidiversao.onrender.com](https://kidiversao.onrender.com)
+- **Banco de Dados**: PostgreSQL em nuvem gerenciado pelo Render
+
+### Configuração para Deploy:
+
+1. **Arquivos de Configuração**:
+   - `requirements.txt` - Dependências do projeto
+   - `Procfile` - Configuração do servidor web (Gunicorn)
+   - `render.yaml` - Configuração automática do Render
+
+2. **Variáveis de Ambiente**:
+   - `FLASK_ENV=production`
+   - `SECRET_KEY` (gerado automaticamente)
+   - `DATABASE_URL` (configurado pelo Render)
+   - `MERCADO_PAGO_ACCESS_TOKEN` e `MERCADO_PAGO_PUBLIC_KEY`
+
+## 🧪 Testes Automatizados
+
+O projeto inclui testes automatizados usando Pytest:
+
+```bash
+# Instalar dependências de teste
+pip install -r requirements.txt
+
+# Executar testes
+pytest
+```
+
+### Tipos de Testes Implementados:
+- **Testes de Unidade**: Validação de modelos e funções individuais
+- **Testes de Integração**: Verificação de fluxos completos da aplicação
+- **Testes de Rotas**: Validação de endpoints HTTP
 
 ## 📝 Licença
 
