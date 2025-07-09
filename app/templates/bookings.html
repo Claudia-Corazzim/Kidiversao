@@ -45,24 +45,21 @@ s{% extends "base.html" %}
                                         <td>{{ booking.event_date.strftime('%d/%m/%Y') }}</td>
                                         <td>
                                             <span class="badge rounded-pill 
-                                                {% if booking.status == 'Confirmed' %}bg-success
-                                                {% elif booking.status == 'Pending' %}bg-warning
+                                                {% if booking.status == 'Confirmado' %}bg-success
+                                                {% elif booking.status == 'Pendente' %}bg-warning
+                                                {% elif booking.status == 'Aguardando Pagamento' %}bg-info
                                                 {% else %}bg-secondary{% endif %}">
                                                 {{ booking.status }}
                                             </span>
                                         </td>
                                         <td>
                                             <span class="badge rounded-pill 
-                                                {% if booking.payment_status == 'approved' %}bg-success
-                                                {% elif booking.payment_status == 'pending' %}bg-warning
-                                                {% elif booking.payment_status == 'rejected' %}bg-danger
+                                                {% if booking.payment_status == 'Aprovado' %}bg-success
+                                                {% elif booking.payment_status == 'Pendente' %}bg-warning
+                                                {% elif booking.payment_status == 'Cancelado' %}bg-danger
                                                 {% else %}bg-secondary{% endif %}">
-                                                {% if booking.payment_status == 'approved' %}
-                                                    Aprovado
-                                                {% elif booking.payment_status == 'pending' %}
-                                                    Pendente
-                                                {% elif booking.payment_status == 'rejected' %}
-                                                    Recusado
+                                                {% if booking.payment_status %}
+                                                    {{ booking.payment_status }}
                                                 {% else %}
                                                     Aguardando
                                                 {% endif %}

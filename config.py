@@ -1,5 +1,4 @@
 import os
-from app.payment_config import MERCADO_PAGO_PUBLIC_KEY, MERCADO_PAGO_ACCESS_TOKEN
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -12,10 +11,6 @@ class Config:
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Configurações do Mercado Pago
-    MERCADO_PAGO_ACCESS_TOKEN = os.environ.get('MERCADO_PAGO_ACCESS_TOKEN', MERCADO_PAGO_ACCESS_TOKEN)
-    MERCADO_PAGO_PUBLIC_KEY = os.environ.get('MERCADO_PAGO_PUBLIC_KEY', MERCADO_PAGO_PUBLIC_KEY)
-    
     # Configurações de email (para produção)
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     MAIL_PORT = int(os.environ.get('MAIL_PORT', '587'))
@@ -26,6 +21,4 @@ class Config:
     
     # URL base para callbacks
     HOST_URL = os.environ.get('HOST_URL', 'http://localhost:5000')
-    MERCADO_PAGO_PUBLIC_KEY = MERCADO_PAGO_PUBLIC_KEY
-    MERCADO_PAGO_ACCESS_TOKEN = MERCADO_PAGO_ACCESS_TOKEN
 

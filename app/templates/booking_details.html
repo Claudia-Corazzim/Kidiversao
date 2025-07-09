@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Agendamento{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Detalhes do Agendamento</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h4>{{ service.name }}</h4>
+                            <p class="text-muted">{{ service.description }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Data do Evento:</strong>
+                            <p>{{ booking.event_date.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong>
+                            <p>
+                                <span class="badge {% if booking.status == 'Confirmado' %}bg-success{% else %}bg-warning{% endif %}">
+                                    {{ booking.status }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Preço:</strong>
+                            <p>R$ {{ service.price }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Data de Criação:</strong>
+                            <p>{{ booking.created_at.strftime('%d/%m/%Y %H:%M') if booking.created_at else 'N/A' }}</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('main.list_bookings') }}" class="btn btn-secondary">Voltar</a>
+                        
+                        <form action="{{ url_for('main.cancel_booking', booking_id=booking.id) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja cancelar este agendamento?');">
+                                Cancelar Agendamento
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

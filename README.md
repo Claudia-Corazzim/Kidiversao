@@ -1,6 +1,6 @@
 # Kidiversão - Sistema de Gerenciamento de Festas Infantis
 
-Desenvolvimento de um software com framework web que utiliza banco de dados, inclui script web (Javascript), nuvem, uso de API, acessibilidade, controle de versões e testes.
+Desenvolvimento de um software com framework web que utiliza banco de dados, inclui script web (Javascript), nuvem, acessibilidade, controle de versões e testes.
 
 ## 📋 Descrição
 
@@ -11,7 +11,7 @@ O Kidiversão é um sistema web para gerenciamento de serviços e pacotes para f
 - **Gerenciamento de Serviços**: Cadastro, edição, visualização e exclusão de serviços para festas.
 - **Gerenciamento de Pacotes**: Criação de pacotes personalizados combinando diferentes serviços.
 - **Sistema de Reservas**: Clientes podem fazer reservas de serviços e pacotes.
-- **Pagamentos Online**: Integração com Mercado Pago para pagamentos via cartão, boleto e PIX.
+- **Pagamentos Online**: Estrutura preparada para integração com gateways de pagamento.
 - **Autenticação de Usuários**: Sistema de registro e login para clientes e prestadores.
 - **Interface Responsiva**: Design adaptável a diferentes dispositivos usando Bootstrap.
 - **Flash Messages**: Feedback visual para operações realizadas no sistema.
@@ -23,7 +23,7 @@ O Kidiversão é um sistema web para gerenciamento de serviços e pacotes para f
 - ✅ **Banco de Dados**: PostgreSQL com SQLAlchemy
 - ✅ **JavaScript**: Interatividade e validação de formulários
 - ✅ **Nuvem**: Deploy na plataforma Render
-- ✅ **API**: Integração com API do Mercado Pago
+- ✅ **API**: Preparado para integração com APIs de pagamento
 - ✅ **Acessibilidade**: WCAG 2.1 AA compliance
 - ✅ **Controle de Versões**: Git/GitHub
 - ✅ **Testes**: Testes automatizados com Pytest
@@ -35,7 +35,7 @@ O Kidiversão é um sistema web para gerenciamento de serviços e pacotes para f
 - **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
 - **Autenticação**: Flask-Login
 - **Migrações de Banco**: Flask-Migrate com Alembic
-- **Pagamentos**: API Mercado Pago (cartão, boleto e PIX)
+- **Pagamentos**: Estrutura preparada para integração com gateways de pagamento
 - **Controle de Versão**: Git e GitHub
 - **Acessibilidade**: ARIA, elementos semânticos HTML5
 
@@ -78,12 +78,7 @@ kidiversao/
    pip install -r requirements.txt
    ```
 
-4. Configure as credenciais do Mercado Pago:
-   - Crie uma conta no [Mercado Pago](https://www.mercadopago.com.br/)
-   - Obtenha suas credenciais de teste no [Painel de Desenvolvedores](https://www.mercadopago.com.br/developers)
-   - Atualize as credenciais no arquivo `app/payment_config.py`
-
-5. Configure o banco de dados:
+4. Configure o banco de dados:
    ```
    flask db upgrade
    ```
@@ -129,25 +124,6 @@ O Kidiversão foi desenvolvido com foco em acessibilidade digital, seguindo as d
 
 Estas implementações seguem as recomendações do WCAG 2.1 níveis A e AA, tornando o sistema acessível para pessoas com diversas necessidades e habilidades.
 
-## 💸 API de Pagamentos
-
-O Kidiversão integra a API do Mercado Pago para oferecer diversas opções de pagamento:
-
-- **Checkout Pro**: Interface completa de pagamento do Mercado Pago
-- **Pagamento via PIX**: Geração de QR Code para pagamento instantâneo
-- **Webhook**: Recebimento de notificações de pagamento em tempo real
-- **Callbacks**: URLs para redirecionamento após o pagamento (sucesso/falha/pendente)
-
-A integração com o Mercado Pago permite:
-
-1. **Criação de Preferências**: Configuração dos detalhes do pagamento
-2. **Checkout Transparente**: Experiência de pagamento sem sair do site
-3. **Geração de QR Code PIX**: Pagamento instantâneo usando PIX
-4. **Consulta de Status**: Verificação do status de pagamentos
-5. **Notificações em Tempo Real**: Webhook para atualizações automáticas
-
-Para testar pagamentos no ambiente de desenvolvimento, utilize os [cartões de teste](https://www.mercadopago.com.br/developers/pt/docs/checkout-api/test-integration) fornecidos pelo Mercado Pago.
-
 ## 🌐 Deploy em Nuvem
 
 O projeto está hospedado na plataforma Render:
@@ -165,7 +141,22 @@ O projeto está hospedado na plataforma Render:
    - `FLASK_ENV=production`
    - `SECRET_KEY` (gerado automaticamente)
    - `DATABASE_URL` (configurado pelo Render)
-   - `MERCADO_PAGO_ACCESS_TOKEN` e `MERCADO_PAGO_PUBLIC_KEY`
+
+## 💸 Pagamentos
+
+O sistema Kidiversão está preparado para integração com diversos gateways de pagamento:
+
+- **Estrutura de Dados**: Modelo de banco de dados com campos preparados para registrar transações
+- **Fluxo de Pagamento**: Rotas implementadas para lidar com o processo de pagamento
+- **Templates**: Interface de usuário pronta para exibir opções de pagamento
+- **Callbacks**: Sistema preparado para receber notificações de status de pagamento
+- **Flexibilidade**: Facilmente adaptável para diversos gateways como Mercado Pago, PayPal, Stripe, etc.
+
+Para integrar seu gateway de pagamento preferido:
+1. Adicione a biblioteca da API do gateway ao arquivo `requirements.txt`
+2. Crie um módulo com os métodos de comunicação com a API do gateway
+3. Atualize as rotas de pagamento para usar os métodos do seu módulo
+4. Configure os callbacks para receber notificações de pagamento
 
 ## 🧪 Testes Automatizados
 

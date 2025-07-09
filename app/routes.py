@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user, login_user, logout_user
 from app import db
 from app.models import Service, Package, Booking, User, PackageItem
-from app.payment import PaymentManager
 from app.contact import ContactManager
 from datetime import datetime
 import json
@@ -65,26 +64,16 @@ def delete_service(service_id):
     service = Service.query.get_or_404(service_id)
     
     try:
-        # Verificação rápida de reservas pagas associadas a este serviço
-        paid_bookings_count = Booking.query.filter_by(
+        # Verificação rápida de reservas confirmadas associadas a este serviço
+        bookings_count = Booking.query.filter_by(
             service_id=service_id, 
-            payment_status='approved'
+            status='Confirmado'
         ).count()
         
-        # Se houver reservas pagas, não permitir exclusão
-        if paid_bookings_count > 0:
-            flash(f'Não é possível excluir este serviço porque existem {paid_bookings_count} reservas pagas associadas a ele.', 'error')
+        # Se houver reservas confirmadas, não permitir exclusão
+        if bookings_count > 0:
+            flash(f'Não é possível excluir este serviço porque existem {bookings_count} reservas confirmadas associadas a ele.', 'error')
             return redirect(url_for('main.index'))
-        
-        # Verificar número de reservas pendentes para alerta (sem carregar objetos completos)
-        pending_bookings_count = Booking.query.filter_by(
-            service_id=service_id, 
-            payment_status='pending'
-        ).count()
-        
-        # Se houver reservas pendentes, alertar mas permitir exclusão
-        if pending_bookings_count > 0:
-            flash(f'Atenção: Este serviço possui {pending_bookings_count} reservas pendentes que serão canceladas.', 'warning')
         
         # Verificar se o serviço está em algum pacote
         package_items_count = PackageItem.query.filter_by(service_id=service_id).count()
@@ -256,7 +245,7 @@ def create_booking():
         db.session.add(new_booking)
         db.session.commit()
         flash('Agendamento realizado com sucesso!', 'success')
-        return redirect(url_for('main.payment', booking_id=new_booking.id))
+        return redirect(url_for('main.list_bookings'))
     
     # Pegar a data de hoje para definir a data mínima no formulário
     today = datetime.now().strftime('%Y-%m-%d')
@@ -285,7 +274,7 @@ def book_service(service_id):
             service_id=service.id, 
             package_id=None,  # Explicitamente definido como None para agendamentos de serviço
             event_date=event_date,
-            status='Pending',
+            status='Pendente',
             total_amount=service.price
         )
         db.session.add(booking)
@@ -374,251 +363,21 @@ def logout():
     flash('Você foi desconectado com sucesso.', 'success')
     return redirect(url_for('main.index'))
 
-# ============ ROTAS DE PAGAMENTO ============
+# ============ ROTAS DE RESERVA ============
 
-@bp.route('/payment/<int:booking_id>', methods=['GET'])
+@bp.route('/booking/<int:booking_id>', methods=['GET'])
 @login_required
-def payment(booking_id):
-    """Iniciar processo de pagamento"""
+def booking_details(booking_id):
+    """Visualizar detalhes da reserva"""
     booking = Booking.query.get_or_404(booking_id)
     service = Service.query.get_or_404(booking.service_id)
     
     # Verificar se o booking pertence ao usuário atual
-    if booking.user_id != current_user.id:
+    if booking.user_id != current_user.id and not current_user.is_admin:
         flash('Você não tem permissão para acessar este recurso.', 'error')
         return redirect(url_for('main.index'))
     
-    # Inicializar gerenciador de pagamentos
-    payment_manager = PaymentManager()
-    
-    # Definir base_url
-    if request.headers.get('X-Forwarded-Proto'):
-        base_url = request.headers.get('X-Forwarded-Proto') + '://' + request.headers.get('Host', '')
-    else:
-        base_url = request.scheme + '://' + request.headers.get('Host', '')
-    
-    # Debug: Imprimir informações sobre o booking
-    print(f"Booking ID: {booking.id}, User ID: {booking.user_id}, Service ID: {booking.service_id}")
-    
-    # Verificar se o agendamento é de um pacote ou serviço individual
-    if booking.package_id:
-        package = Package.query.get_or_404(booking.package_id)
-        item_name = f"Pacote: {package.name}"
-        item_description = package.descricao or f"Pacote de serviços incluindo {service.name}"
-        item_price = package.total_price or service.price
-        print(f"Package Name: {package.name}, Price: {item_price}, Description: {package.descricao}")
-    else:
-        item_name = f"Serviço: {service.name}"
-        item_description = service.description or "Serviço individual"
-        item_price = service.price
-        print(f"Service Name: {service.name}, Price: {service.price}, Description: {service.description}")
-    
-    print(f"Base URL: {base_url}")
-    
-    try:
-        # Criar preferência de pagamento com informações contextuais
-        preference = payment_manager.create_preference_with_context(
-            booking, 
-            item_name,
-            item_description,
-            item_price,
-            base_url
-        )
-        
-        # Debug: Imprimir a preferência retornada
-        print(f"Preference returned: {json.dumps(preference, indent=2, default=str)}")
-        
-        # Verificar se houve erro na criação da preferência
-        if preference.get("status") == "error" or "id" not in preference:
-            error_message = preference.get("error_message", "Erro desconhecido ao criar preferência de pagamento")
-            print(f"ERRO NA PREFERÊNCIA: {error_message}")
-            flash(f'Erro ao criar preferência de pagamento: {error_message}', 'error')
-            return redirect(url_for('main.list_bookings'))
-        
-        # Salvar ID da preferência
-        booking.payment_preference_id = preference["id"]
-        booking.total_amount = item_price
-        db.session.commit()
-        
-        # Renderizar página de pagamento
-        return render_template('payment.html', 
-                            booking=booking, 
-                            service=service, 
-                            preference=preference, 
-                            public_key=current_app.config.get('MERCADO_PAGO_PUBLIC_KEY'))
-    except Exception as e:
-        # Debug: Imprimir o erro completo
-        import traceback
-        print(f"Erro ao processar pagamento: {str(e)}")
-        print(traceback.format_exc())
-        
-        # Mensagem amigável para o usuário
-        flash(f'Ocorreu um erro ao processar o pagamento. Por favor, tente novamente ou entre em contato com o suporte. Detalhes: {str(e)}', 'error')
-        return redirect(url_for('main.list_bookings'))
-        print(traceback.format_exc())
-        
-        flash(f'Ocorreu um erro ao processar o pagamento: {str(e)}', 'error')
-        return redirect(url_for('main.list_bookings'))
-
-@bp.route('/payment/pix/<int:booking_id>', methods=['GET'])
-@login_required
-def payment_pix(booking_id):
-    """Gerar QR Code PIX para pagamento"""
-    booking = Booking.query.get_or_404(booking_id)
-    service = Service.query.get_or_404(booking.service_id)
-    
-    # Verificar se o booking pertence ao usuário atual
-    if booking.user_id != current_user.id:
-        flash('Você não tem permissão para acessar este recurso.', 'error')
-        return redirect(url_for('main.index'))
-    
-    # Inicializar gerenciador de pagamentos
-    payment_manager = PaymentManager()
-    
-    try:
-        # Gerar QR code PIX
-        payment = payment_manager.generate_pix_qrcode(booking, service)
-        
-        # Debug: Imprimir a resposta do pagamento PIX
-        print(f"PIX Payment response: {json.dumps(payment, indent=2, default=str)}")
-        
-        # Verificar se houve erro na geração do PIX
-        if payment.get("status") == "error" or "id" not in payment:
-            error_message = payment.get("error_message", "Erro desconhecido ao gerar QR Code PIX")
-            flash(f'Erro ao gerar QR Code PIX: {error_message}', 'error')
-            return redirect(url_for('main.payment', booking_id=booking.id))
-        
-        # Verificar se o PIX contém os dados do QR Code
-        if not payment.get("point_of_interaction") or not payment.get("point_of_interaction", {}).get("transaction_data"):
-            flash('Erro ao gerar QR Code PIX: Dados do QR Code não encontrados na resposta', 'error')
-            return redirect(url_for('main.payment', booking_id=booking.id))
-        
-        # Salvar informações do pagamento
-        booking.payment_id = payment["id"]
-        booking.payment_method = "pix"
-        booking.payment_status = payment["status"]
-        db.session.commit()
-        
-        # Renderizar página com QR code PIX
-        return render_template('payment_pix.html', 
-                              booking=booking, 
-                              service=service, 
-                              payment=payment)
-    except Exception as e:
-        flash(f'Ocorreu um erro ao processar o pagamento: {str(e)}', 'error')
-        return redirect(url_for('main.payment', booking_id=booking.id))
-
-@bp.route('/payment/success/<int:booking_id>')
-@login_required
-def payment_success(booking_id):
-    """Callback para pagamento aprovado"""
-    booking = Booking.query.get_or_404(booking_id)
-    
-    # Atualizar status do pagamento
-    payment_id = request.args.get('payment_id')
-    if payment_id:
-        booking.payment_id = payment_id
-        booking.payment_status = 'approved'
-        booking.payment_date = datetime.utcnow()
-        booking.status = 'Confirmed'
-        db.session.commit()
-    
-    flash('Pagamento aprovado com sucesso!', 'success')
-    return render_template('payment_success.html', booking=booking)
-
-@bp.route('/payment/failure/<int:booking_id>')
-@login_required
-def payment_failure(booking_id):
-    """Callback para pagamento recusado"""
-    booking = Booking.query.get_or_404(booking_id)
-    
-    # Atualizar status do pagamento
-    payment_id = request.args.get('payment_id')
-    if payment_id:
-        booking.payment_id = payment_id
-        booking.payment_status = 'rejected'
-        booking.payment_date = datetime.utcnow()
-        db.session.commit()
-    
-    flash('Houve um problema com o seu pagamento.', 'error')
-    return render_template('payment_failure.html', booking=booking)
-
-@bp.route('/payment/pending/<int:booking_id>')
-@login_required
-def payment_pending(booking_id):
-    """Callback para pagamento pendente"""
-    booking = Booking.query.get_or_404(booking_id)
-    
-    # Atualizar status do pagamento
-    payment_id = request.args.get('payment_id')
-    if payment_id:
-        booking.payment_id = payment_id
-        booking.payment_status = 'pending'
-        booking.payment_date = datetime.utcnow()
-        db.session.commit()
-    
-    flash('Seu pagamento está em processamento.', 'info')
-    return render_template('payment_pending.html', booking=booking)
-
-@bp.route('/payment/webhook', methods=['POST'])
-def payment_webhook():
-    """Webhook para receber notificações de pagamento do Mercado Pago"""
-    payload = request.json
-    
-    try:
-        if payload and payload.get('type') == 'payment' and payload.get('data', {}).get('id'):
-            payment_id = payload['data']['id']
-            
-            # Log para debug
-            print(f"Webhook recebido para payment_id: {payment_id}")
-            print(f"Payload completo: {json.dumps(payload, indent=2, default=str)}")
-            
-            # Inicializar gerenciador de pagamentos
-            payment_manager = PaymentManager()
-            
-            try:
-                # Obter status do pagamento
-                payment = payment_manager.get_payment_status(payment_id)
-                
-                # Log para debug
-                print(f"Resposta de status de pagamento: {json.dumps(payment, indent=2, default=str)}")
-                
-                # Obter ID da reserva a partir da referência externa
-                external_reference = payment.get('external_reference')
-                
-                if external_reference:
-                    try:
-                        booking = Booking.query.get(int(external_reference))
-                        if booking:
-                            # Atualizar status do pagamento
-                            booking.payment_id = payment_id
-                            booking.payment_status = payment.get('status')
-                            booking.payment_method = payment.get('payment_method_id')
-                            booking.payment_date = datetime.utcnow()
-                            
-                            # Se pagamento aprovado, confirmar reserva
-                            if payment.get('status') == 'approved':
-                                booking.status = 'Confirmed'
-                            
-                            db.session.commit()
-                            print(f"Booking {booking.id} atualizado com sucesso. Status: {booking.payment_status}")
-                        else:
-                            print(f"Booking não encontrado para external_reference: {external_reference}")
-                    except ValueError:
-                        print(f"Erro ao converter external_reference para int: {external_reference}")
-                else:
-                    print("External reference não encontrada na resposta do pagamento")
-            except Exception as e:
-                print(f"Erro ao processar status do pagamento: {str(e)}")
-                import traceback
-                print(traceback.format_exc())
-        
-        return jsonify({'status': payment.get('status', 'unknown')})
-    except Exception as e:
-        print(f"Erro no webhook: {str(e)}")
-        import traceback
-        print(traceback.format_exc())
-        return jsonify({'status': 'error', 'message': str(e)})
+    return render_template('booking_details.html', booking=booking, service=service)
 
 # Cancelar agendamento
 @bp.route('/booking/cancel/<int:booking_id>', methods=['POST'])
@@ -632,7 +391,7 @@ def cancel_booking(booking_id):
         return redirect(url_for('main.list_bookings'))
     
     # Verificar status de pagamento - não permitir cancelar se já pago
-    if booking.payment_status == 'approved':
+    if booking.payment_status == 'Aprovado':
         flash('Não é possível cancelar um agendamento já pago. Entre em contato com o suporte.', 'error')
         return redirect(url_for('main.list_bookings'))
     
@@ -784,3 +543,64 @@ def remove_package_item(package_id, item_id):
     
     flash('Item removido do pacote com sucesso!', 'success')
     return redirect(url_for('main.package_items', package_id=package_id))
+
+# ============ ROTAS DE PAGAMENTO (Estrutura básica) ============
+
+@bp.route('/payment/<int:booking_id>', methods=['GET'])
+@login_required
+def payment(booking_id):
+    """Página de pagamento (estrutura básica para futura integração)"""
+    booking = Booking.query.get_or_404(booking_id)
+    service = Service.query.get_or_404(booking.service_id)
+    
+    # Verificar se o booking pertence ao usuário atual
+    if booking.user_id != current_user.id and not current_user.is_admin:
+        flash('Você não tem permissão para acessar este recurso.', 'error')
+        return redirect(url_for('main.index'))
+    
+    # Atualizar o status do agendamento para aguardando pagamento
+    booking.status = 'Aguardando Pagamento'
+    booking.payment_status = 'Pendente'
+    db.session.commit()
+    
+    # Em uma implementação futura, aqui seria integrada a plataforma de pagamento escolhida
+    
+    return render_template('payment.html', booking=booking, service=service)
+
+@bp.route('/payment/success/<int:booking_id>', methods=['GET'])
+@login_required
+def payment_success(booking_id):
+    """Callback para pagamento bem-sucedido"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Verificar se o booking pertence ao usuário atual
+    if booking.user_id != current_user.id and not current_user.is_admin:
+        flash('Você não tem permissão para acessar este recurso.', 'error')
+        return redirect(url_for('main.index'))
+    
+    # Atualizar status do pagamento
+    booking.status = 'Confirmado'
+    booking.payment_status = 'Aprovado'
+    booking.payment_date = datetime.utcnow()
+    db.session.commit()
+    
+    flash('Pagamento realizado com sucesso!', 'success')
+    return redirect(url_for('main.booking_details', booking_id=booking.id))
+
+@bp.route('/payment/cancel/<int:booking_id>', methods=['GET'])
+@login_required
+def payment_cancel(booking_id):
+    """Cancelamento de pagamento"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Verificar se o booking pertence ao usuário atual
+    if booking.user_id != current_user.id and not current_user.is_admin:
+        flash('Você não tem permissão para acessar este recurso.', 'error')
+        return redirect(url_for('main.index'))
+    
+    # Atualizar status do pagamento
+    booking.payment_status = 'Cancelado'
+    db.session.commit()
+    
+    flash('Pagamento cancelado.', 'info')
+    return redirect(url_for('main.list_bookings'))

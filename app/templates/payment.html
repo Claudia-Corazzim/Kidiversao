@@ -15,97 +15,55 @@
                         <h2 class="h4">Detalhes do Serviço</h2>
                         <div class="d-flex justify-content-between">
                             <p><strong>Serviço:</strong> {{ service.name }}</p>
-                            <p><strong>Valor:</strong> R$ {{ service.price }}</p>
+                            <p><strong>Valor:</strong> R$ {{ "%.2f"|format(service.price|float) }}</p>
                         </div>
                         <p><strong>Data do Evento:</strong> {{ booking.event_date.strftime('%d/%m/%Y') }}</p>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <p>Esta é uma página de demonstração para futura integração com gateway de pagamento.</p>
                     </div>
 
                     <div class="mb-4">
                         <h2 class="h4">Formas de Pagamento</h2>
                         
-                        {% if preference and preference.get('id') and preference.get('id') != "error" %}
-                        <ul class="nav nav-tabs" id="paymentTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="mp-tab" data-bs-toggle="tab" data-bs-target="#mp-content" type="button" role="tab" aria-controls="mp-content" aria-selected="true">Cartão/Boleto</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="pix-tab" data-bs-toggle="tab" data-bs-target="#pix-content" type="button" role="tab" aria-controls="pix-content" aria-selected="false">PIX</button>
-                            </li>
-                        </ul>
-                        
-                        <div class="tab-content py-3" id="paymentTabsContent">
-                            <!-- Conteúdo da aba de Mercado Pago (Cartão, Boleto, etc) -->
-                            <div class="tab-pane fade show active" id="mp-content" role="tabpanel" aria-labelledby="mp-tab">
-                                <div id="wallet_container"></div>
-                                <div class="text-center mt-4">
-                                    <div class="cho-container"></div>
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <div class="card mb-3">
+                                    <div class="card-body text-center">
+                                        <i class="fa fa-credit-card fa-3x mb-3"></i>
+                                        <h5>Cartão de Crédito</h5>
+                                        <a href="{{ url_for('main.payment_success', booking_id=booking.id) }}" class="btn btn-primary mt-2">Pagar com Cartão</a>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <!-- Conteúdo da aba de PIX -->
-                            <div class="tab-pane fade" id="pix-content" role="tabpanel" aria-labelledby="pix-tab">
-                                <div class="text-center">
-                                    <p>Pague instantaneamente com PIX!</p>
-                                    <a href="{{ url_for('main.payment_pix', booking_id=booking.id) }}" class="btn btn-primary">Gerar QR Code PIX</a>
+                            <div class="col-md-4">
+                                <div class="card mb-3">
+                                    <div class="card-body text-center">
+                                        <i class="fa fa-barcode fa-3x mb-3"></i>
+                                        <h5>Boleto</h5>
+                                        <a href="{{ url_for('main.payment_success', booking_id=booking.id) }}" class="btn btn-primary mt-2">Gerar Boleto</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card mb-3">
+                                    <div class="card-body text-center">
+                                        <i class="fa fa-qrcode fa-3x mb-3"></i>
+                                        <h5>PIX</h5>
+                                        <a href="{{ url_for('main.payment_success', booking_id=booking.id) }}" class="btn btn-primary mt-2">Pagar com PIX</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        {% else %}
-                        <div class="alert alert-warning">
-                            <p>Não foi possível carregar as opções de pagamento. Por favor, tente novamente mais tarde.</p>
-                            <p>Erro: {{ preference.error_message if preference and preference.get('error_message') else 'Erro desconhecido na integração com o Mercado Pago' }}</p>
-                            <a href="{{ url_for('main.list_bookings') }}" class="btn btn-primary mt-2">Voltar para Agendamentos</a>
-                        </div>
-                        {% endif %}
                     </div>
-                </div>
-                <div class="card-footer bg-light">
-                    <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Voltar</a>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('main.payment_cancel', booking_id=booking.id) }}" class="btn btn-secondary">Cancelar Pagamento</a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script src="https://sdk.mercadopago.com/js/v2"></script>
-<script>
-    // Configurar o SDK do Mercado Pago
-    const mp = new MercadoPago('{{ public_key }}', {
-        locale: 'pt-BR'
-    });
-
-    {% if preference and preference.get('id') and preference.get('id') != "error" %}
-    // Inicializar checkout
-    try {
-        mp.checkout({
-            preference: {
-                id: '{{ preference.get('id') }}'
-            },
-            render: {
-                container: '.cho-container',
-                label: 'Pagar agora',
-            }
-        });
-
-        // Inicializar Wallet Brick (versão simplificada do checkout)
-        mp.bricks().create("wallet", "wallet_container", {
-            initialization: {
-                preferenceId: "{{ preference.get('id') }}",
-            },
-        });
-    } catch (error) {
-        console.error("Erro ao inicializar checkout do Mercado Pago:", error);
-        document.querySelector('.cho-container').innerHTML = 
-            '<div class="alert alert-warning">Erro ao carregar checkout: ' + error.message + '</div>';
-        document.querySelector('#wallet_container').innerHTML = 
-            '<div class="alert alert-warning">Erro ao carregar checkout: ' + error.message + '</div>';
-    }
-    {% else %}
-    console.error("Não foi possível inicializar o checkout do Mercado Pago devido a um erro na preferência.");
-    document.querySelector('.cho-container').innerHTML = '<div class="alert alert-warning">Não foi possível carregar o checkout. Por favor, tente novamente mais tarde.</div>';
-    document.querySelector('#wallet_container').innerHTML = '<div class="alert alert-warning">Não foi possível carregar o checkout. Por favor, tente novamente mais tarde.</div>';
-    {% endif %}
-</script>
 {% endblock %}
